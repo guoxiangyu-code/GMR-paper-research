@@ -1,0 +1,16 @@
+cff-version: 1.2.0
+title: "Generalized Moment Retrieval"
+message: "If you use this repository, please cite the associated paper."
+type: software
+authors:
+  - family-names: "Anonymous"
+    given-names: "Authors"
+repository-code: "https://github.com/your-org/generalized-moment-retrieval"
+abstract: "Official benchmark labels and evaluation toolkit for Generalized Moment Retrieval (GMR)."
+keywords:
+  - generalized moment retrieval
+  - video moment retrieval
+  - temporal grounding
+  - benchmark
+  - evaluation
+license: MIT

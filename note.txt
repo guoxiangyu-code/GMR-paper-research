@@ -1,0 +1,37 @@
+分阶段发布：
+benchmark/data + official eval
+pipeline/data_factory
+baseline models + training/inference
+论文定义了任务、数据、评测与方法；仓库已有可用的标签数据与评估实现。
+
+第一阶段推荐的开源目标
+Generalized Moment Retrieval benchmark
+Soccer-GMR labels
+Official evaluation toolkit
+
+数据发布策略建议
+视频文件不建议直接放 GitHub。
+推荐分层发布：
+GitHub：代码、标签、元数据、样例、下载脚本、文档。
+Hugging Face Datasets：JSONL 标注、split、轻量样例、可能的小型特征文件。
+Hugging Face Hub / 外部存储：大体积特征或可公开的视频索引。
+
+建议至少有一个“最小可验证闭环”
+比如：
+一个小型 GT 样例
+一个 submission 样例
+一条命令能跑出结果
+README 中告诉别人“如何快速验证评测工具没问题”
+
+CITATION.cff biaozhu标准引用
+
+根readme顺序
+先讲任务
+再讲现在发布了什么
+再讲 benchmark
+再讲仓库怎么组织
+再讲大文件策略
+再讲怎么跑
+再讲详细说明去哪看
+最后给citation
+
