@@ -1,4 +1,4 @@
-# Soccer-GMR Data
+# Soccer-GMR Dataset
 
 This directory contains the label files for **Soccer-GMR**, a benchmark for **Generalized Moment Retrieval (GMR)**.
 
