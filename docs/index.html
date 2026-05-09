@@ -14,6 +14,18 @@
       href="https://fonts.googleapis.com/css2?family=Sora:wght@400;500;600;700;800&family=IBM+Plex+Sans:wght@400;500;600&display=swap"
       rel="stylesheet"
     />
+    <script>
+      window.MathJax = {
+        tex: {
+          inlineMath: [["\\(", "\\)"]],
+          displayMath: [["\\[", "\\]"]]
+        },
+        svg: {
+          fontCache: "global"
+        }
+      };
+    </script>
+    <script defer src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-svg.js"></script>
     <link rel="stylesheet" href="styles.css" />
   </head>
   <body>
@@ -441,44 +453,95 @@
               <strong>Official JSONL evaluation scripts are released in the GitHub repository</strong>
             </div>
           </div>
-          <div class="formula-grid reveal-on-scroll">
-            <article class="formula-card">
-              <div class="formula-tag">Null-set Rejection</div>
-              <h3>Rej-F1</h3>
+          <div class="formula-panel reveal-on-scroll">
+            <div class="formula-panel-header">
+              <div>
+                <p class="eyebrow">GMR-specific Metrics</p>
+                <h3>Metrics Introduced for Generalized Retrieval</h3>
+              </div>
               <p>
-                Treats correctly rejected null-set queries as the target class at an operating
-                threshold tau.
+                These metrics extend conventional VMR evaluation to null-set rejection,
+                multi-moment localization, and end-to-end set prediction.
               </p>
-              <div class="formula-block">
-                Rej-F1 = 2TP<sub>r</sub> / (2TP<sub>r</sub> + FP<sub>r</sub> + FN<sub>r</sub>)
+            </div>
+
+            <article class="formula-row">
+              <div class="formula-copy">
+                <div class="formula-tag">Null-set Rejection</div>
+                <h3>Rej-F1</h3>
+                <p>
+                  Treats correctly rejected null-set queries as the target class at an operating
+                  threshold \( \tau \).
+                </p>
+              </div>
+              <div class="formula-math">
+                \[
+                \mathrm{Rej\text{-}F1}
+                =
+                \frac{2\mathrm{TP}_{r}}
+                {2\mathrm{TP}_{r}+\mathrm{FP}_{r}+\mathrm{FN}_{r}}
+                \]
               </div>
             </article>
-            <article class="formula-card">
-              <div class="formula-tag">Multi-moment Retrieval</div>
-              <h3>mR+@k</h3>
-              <p>
-                Measures the retrieval of additional relevant moments beyond the first matched
-                moment on multi-moment queries.
-              </p>
-              <div class="formula-block">
-                mR+@k = 1/|I| sum<sub>theta in I</sub> 1/|Q<sup>m</sup>| sum<sub>q in Q<sup>m</sup></sub>
-                max(0, |M<sub>k</sub>(q;theta)| - 1) / (|G(q)| - 1)
+
+            <article class="formula-row">
+              <div class="formula-copy">
+                <div class="formula-tag">Multi-moment Retrieval</div>
+                <h3>mR+@k</h3>
+                <p>
+                  Measures the retrieval of additional relevant moments beyond the first matched
+                  moment on multi-moment queries.
+                </p>
+              </div>
+              <div class="formula-math">
+                \[
+                \mathrm{mR}^{+}@k
+                =
+                \frac{1}{|\mathcal{I}|}
+                \sum_{\theta \in \mathcal{I}}
+                \frac{1}{|\mathcal{Q}^{m}|}
+                \sum_{q \in \mathcal{Q}^{m}}
+                \frac{
+                  \max(0, |\mathcal{M}_{k}(q;\theta)| - 1)
+                }{
+                  |\mathcal{G}(q)| - 1
+                }
+                \]
               </div>
             </article>
-            <article class="formula-card">
-              <div class="formula-tag">End-to-End GMR</div>
-              <h3>G-mIoU@k</h3>
-              <p>
-                Jointly evaluates rejection and localization over all queries after gating
-                predictions by the existence score.
-              </p>
-              <div class="formula-block">
-                G-mIoU@k = 1/|Q| sum<sub>q in Q</sub> IoU<sub>G</sub>(q)
+
+            <article class="formula-row">
+              <div class="formula-copy">
+                <div class="formula-tag">End-to-End GMR</div>
+                <h3>G-mIoU@k</h3>
+                <p>
+                  Jointly evaluates rejection and localization over all queries after gating
+                  predictions by the existence score.
+                </p>
               </div>
-              <div class="formula-cases">
-                IoU<sub>G</sub>(q) = 1 for correct empty-set rejection; 0 for positive/null-set
-                mismatch; otherwise set-level IoU between top-k predictions and all ground-truth
-                moments.
+              <div class="formula-math formula-math-stacked">
+                \[
+                \mathrm{G\text{-}mIoU}@k
+                =
+                \frac{1}{|\mathcal{Q}|}
+                \sum_{q \in \mathcal{Q}}
+                \mathrm{IoU}_{G}(q)
+                \]
+                \[
+                \mathrm{IoU}_{G}(q)=
+                \begin{cases}
+                1,
+                & \hat{\mathcal{P}}_{k}(q)=\varnothing \land \mathcal{G}(q)=\varnothing \\
+                \dfrac{
+                  \sum_{(i,j)\in\mathcal{M}}\mathrm{IoU}(\hat{p}_{i},g_{j})
+                }{
+                  |\hat{\mathcal{P}}_{k}|+|\mathcal{G}|-|\mathcal{M}|
+                },
+                & \hat{\mathcal{P}}_{k}(q)\neq\varnothing \land \mathcal{G}(q)\neq\varnothing \\
+                0,
+                & \mathrm{otherwise}
+                \end{cases}
+                \]
               </div>
             </article>
           </div>

@@ -277,7 +277,7 @@ button {
 .image-panel,
 .feature-card,
 .metric-card,
-.formula-card,
+.formula-panel,
 .resource-card,
 .table-card,
 .demo-shell,
@@ -486,7 +486,6 @@ button {
 
 .two-column-grid,
 .metric-columns,
-.formula-grid,
 .scenario-grid,
 .resource-grid,
 .stats-grid,
@@ -522,7 +521,6 @@ button {
 }
 
 .metric-columns,
-.formula-grid,
 .scenario-grid,
 .resource-grid,
 .stats-grid {
@@ -531,7 +529,6 @@ button {
 
 .feature-card,
 .metric-card,
-.formula-card,
 .resource-card,
 .table-card,
 .code-card,
@@ -577,7 +574,6 @@ button {
 
 .feature-card h3,
 .metric-card h3,
-.formula-card h3,
 .resource-card h3,
 .scenario-card h3,
 .comparison-card h3,
@@ -612,59 +608,6 @@ button {
 .metric-card li,
 .comparison-card li {
   margin: 10px 0;
-}
-
-.formula-grid {
-  margin-top: 22px;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
-}
-
-.formula-card {
-  display: flex;
-  flex-direction: column;
-  gap: 12px;
-  min-height: 280px;
-}
-
-.formula-card p {
-  margin: 0;
-  color: var(--muted);
-  line-height: 1.65;
-}
-
-.formula-tag {
-  width: fit-content;
-  padding: 6px 10px;
-  border-radius: 999px;
-  color: var(--accent);
-  background: rgba(57, 209, 173, 0.1);
-  border: 1px solid rgba(57, 209, 173, 0.18);
-  font-size: 0.78rem;
-  font-weight: 700;
-  letter-spacing: 0.08em;
-  text-transform: uppercase;
-}
-
-.formula-block,
-.formula-cases {
-  border: 1px solid rgba(255, 255, 255, 0.08);
-  background: rgba(4, 12, 21, 0.36);
-  border-radius: 16px;
-  color: #ddecff;
-  font-family: "IBM Plex Sans", sans-serif;
-  line-height: 1.7;
-}
-
-.formula-block {
-  padding: 14px;
-  font-weight: 600;
-  overflow-wrap: anywhere;
-}
-
-.formula-cases {
-  padding: 12px 14px;
-  color: var(--muted);
-  font-size: 0.9rem;
 }
 
 .scenario-section .image-panel,
@@ -808,6 +751,85 @@ button {
   background:
     linear-gradient(180deg, rgba(255, 255, 255, 0.04), rgba(57, 209, 173, 0.08)),
     var(--panel);
+}
+
+.formula-panel {
+  margin-top: 24px;
+  padding: 26px;
+  border-radius: var(--radius-lg);
+  background:
+    radial-gradient(circle at top right, rgba(57, 209, 173, 0.1), transparent 28%),
+    linear-gradient(180deg, rgba(255, 255, 255, 0.035), rgba(255, 255, 255, 0.015)),
+    var(--panel);
+}
+
+.formula-panel-header {
+  display: grid;
+  grid-template-columns: minmax(260px, 0.92fr) minmax(0, 1.08fr);
+  gap: 22px;
+  align-items: end;
+  margin-bottom: 18px;
+}
+
+.formula-panel-header h3,
+.formula-copy h3 {
+  margin: 0;
+  font-family: "Sora", sans-serif;
+  letter-spacing: -0.03em;
+}
+
+.formula-panel-header p:last-child,
+.formula-copy p {
+  margin: 0;
+  color: var(--muted);
+  line-height: 1.7;
+}
+
+.formula-row {
+  display: grid;
+  grid-template-columns: minmax(220px, 0.45fr) minmax(0, 1fr);
+  gap: 22px;
+  align-items: center;
+  padding: 22px 0;
+  border-top: 1px solid var(--line);
+}
+
+.formula-copy {
+  display: grid;
+  gap: 10px;
+}
+
+.formula-tag {
+  width: fit-content;
+  padding: 6px 10px;
+  border-radius: 999px;
+  color: var(--accent);
+  background: rgba(57, 209, 173, 0.1);
+  border: 1px solid rgba(57, 209, 173, 0.18);
+  font-size: 0.76rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.formula-math {
+  overflow-x: auto;
+  padding: 16px 18px;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 18px;
+  background:
+    linear-gradient(180deg, rgba(4, 12, 21, 0.64), rgba(4, 12, 21, 0.42));
+}
+
+.formula-math mjx-container {
+  margin: 0 !important;
+  color: #ddecff;
+  font-size: 112% !important;
+}
+
+.formula-math-stacked {
+  display: grid;
+  gap: 14px;
 }
 
 .table-card {
@@ -1013,12 +1035,13 @@ td {
   .pipeline-block,
   .benchmark-showcase,
   .benchmark-visual-grid,
-  .table-card-header {
+  .table-card-header,
+  .formula-panel-header,
+  .formula-row {
     grid-template-columns: 1fr;
   }
 
   .metric-columns,
-  .formula-grid,
   .scenario-grid,
   .resource-grid,
   .stats-grid {
@@ -1037,7 +1060,6 @@ td {
   }
 
   .metric-columns,
-  .formula-grid,
   .scenario-grid,
   .resource-grid,
   .stats-grid,
