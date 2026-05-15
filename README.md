@@ -57,7 +57,7 @@ Dataset statistics:
 | `Standard` | 4,138 | 465 | 1,036 | 5,639 | 1,957 |
 | `Full` | 16,898 | 2,235 | 2,986 | 22,119 | 5,468 |
 
-For details about label fields and directory organization, see [`data/README.md`](data/README.md). Large assets, including videos and model weights, are hosted on [Hugging Face](https://huggingface.co/datasets/diiiA22B9S/Soccer-GMR). Access is manually reviewed after the requester completes the Soccer-GMR NDA form. Commercial use, redistribution, public hosting, or sharing access links is not permitted.
+For details about label fields and directory organization, see [`data/README.md`](data/README.md). Large assets, including videos, features, and model weights, are hosted on [Hugging Face](https://huggingface.co/datasets/diiiA22B9S/Soccer-GMR). Access is manually reviewed after the requester completes the Soccer-GMR NDA form. Commercial use, redistribution, public hosting, or sharing access links is not permitted.
 
 <p align="center">
   <img src="assets/dataset.png" alt="Statistics of Soccer-GMR" width="720" />
@@ -86,11 +86,13 @@ For input formats, metric definitions, and command-line options, see [`eval/READ
 
 ## Methods
 
-The paper studies GMR across two modeling paradigms.
+The paper studies GMR across two modeling paradigms. This repository currently releases the feature-level implementation of **Moment-DETR-GMR**, a Moment-DETR baseline augmented with the GMR Adapter.
 
-**GMR Adapter** is a lightweight plug-and-play module for discriminative VMR backbones. It adds an explicit existence-estimation branch for null-set prediction while preserving the temporal localization backbone.
+**GMR Adapter** is a lightweight plug-and-play module for discriminative VMR backbones. It adds an explicit existence-estimation branch for null-set prediction while preserving the temporal localization backbone. The released Moment-DETR-GMR code pools decoder query representations, predicts `pred_exist_score`, and uses binary existence supervision derived from whether `relevant_windows` is empty.
 
 ![Architecture of the GMR Adapter](assets/adapter10.png)
+
+Training and inference entry points are provided in [`training/moment_detr_gmr/`](training/moment_detr_gmr/), with runnable script templates in [`scripts/`](scripts/).
 
 **GMR-tailored GRPO Reward** adapts reinforcement learning for generative multimodal large language models by jointly rewarding correct rejection behavior and temporal localization quality.
 
@@ -132,13 +134,20 @@ Generalized_Moment_Retrieval/
 |   |-- normalization.py
 |   |-- utils.py
 |   `-- example/
+|-- configs/
+|   `-- moment_detr_gmr/
+|-- models/
+|   `-- moment_detr_gmr/
+|-- training/
+|   `-- moment_detr_gmr/
+|-- scripts/
+|   |-- train_moment_detr_gmr.sh
+|   `-- infer_moment_detr_gmr.sh
 |-- docs/
 |   |-- index.html
 |   |-- styles.css
 |   `-- script.js
-|-- pipeline/
-|-- models/
-`-- training/
+`-- pipeline/
 ```
 
 ## Installation
@@ -146,6 +155,24 @@ Generalized_Moment_Retrieval/
 ```bash
 pip install -r requirements.txt
 ```
+
+PyTorch installation can vary by CUDA version. If needed, install the matching PyTorch build from the official PyTorch instructions before installing the rest of the requirements.
+
+## Moment-DETR-GMR
+
+Train with precomputed CLIP text features and CLIP + SlowFast video features:
+
+```bash
+bash scripts/train_moment_detr_gmr.sh
+```
+
+Run inference with a trained checkpoint:
+
+```bash
+bash scripts/infer_moment_detr_gmr.sh
+```
+
+The scripts can be configured with `MODEL_PATH`, `TEXT_FEAT_DIR`, `CLIP_FEAT_DIR`, `SLOWFAST_FEAT_DIR`, and `RESULTS_DIR`.
 
 ## Citation
 

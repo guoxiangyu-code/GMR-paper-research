@@ -1,0 +1,16 @@
+dset_name: soccer_gmr
+clip_length: 2
+train_path: data/label/Standard/train.jsonl
+eval_path: data/label/Standard/val.jsonl
+
+# Moment-DETR-GMR is trained with localization and existence supervision by default.
+lr: 0.0001
+bsz: 32
+eval_bsz: 100
+n_epoch: 400
+max_es_cnt: 80
+lw_saliency: 0
+use_exist_head: true
+exist_pool: "max"
+exist_loss_coef: 1.0
+exist_gate_thd: 0.4
