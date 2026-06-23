@@ -1,0 +1,410 @@
+[
+    {
+        "mode": "rejection_FP",
+        "total_null_set": 210,
+        "FP_count_at_0.4": 63,
+        "TN_count_at_0.4": 147,
+        "FP_rate_at_0.4": 0.3,
+        "score_distribution": {
+            "mean": 0.3894,
+            "std": 0.0373,
+            "min": 0.3154,
+            "max": 0.5368,
+            "median": 0.3858
+        },
+        "FP_curve": [
+            {
+                "threshold": 0.2,
+                "FP_count": 210
+            },
+            {
+                "threshold": 0.21,
+                "FP_count": 210
+            },
+            {
+                "threshold": 0.22,
+                "FP_count": 210
+            },
+            {
+                "threshold": 0.23,
+                "FP_count": 210
+            },
+            {
+                "threshold": 0.24,
+                "FP_count": 210
+            },
+            {
+                "threshold": 0.25,
+                "FP_count": 210
+            },
+            {
+                "threshold": 0.26,
+                "FP_count": 210
+            },
+            {
+                "threshold": 0.27,
+                "FP_count": 210
+            },
+            {
+                "threshold": 0.28,
+                "FP_count": 210
+            },
+            {
+                "threshold": 0.29,
+                "FP_count": 210
+            },
+            {
+                "threshold": 0.3,
+                "FP_count": 210
+            },
+            {
+                "threshold": 0.31,
+                "FP_count": 210
+            },
+            {
+                "threshold": 0.32,
+                "FP_count": 208
+            },
+            {
+                "threshold": 0.33,
+                "FP_count": 205
+            },
+            {
+                "threshold": 0.34,
+                "FP_count": 195
+            },
+            {
+                "threshold": 0.35,
+                "FP_count": 182
+            },
+            {
+                "threshold": 0.36,
+                "FP_count": 170
+            },
+            {
+                "threshold": 0.37,
+                "FP_count": 151
+            },
+            {
+                "threshold": 0.38,
+                "FP_count": 129
+            },
+            {
+                "threshold": 0.39,
+                "FP_count": 92
+            },
+            {
+                "threshold": 0.4,
+                "FP_count": 63
+            },
+            {
+                "threshold": 0.41,
+                "FP_count": 43
+            },
+            {
+                "threshold": 0.42,
+                "FP_count": 34
+            },
+            {
+                "threshold": 0.43,
+                "FP_count": 22
+            },
+            {
+                "threshold": 0.44,
+                "FP_count": 17
+            },
+            {
+                "threshold": 0.45,
+                "FP_count": 13
+            },
+            {
+                "threshold": 0.46,
+                "FP_count": 9
+            },
+            {
+                "threshold": 0.47,
+                "FP_count": 8
+            },
+            {
+                "threshold": 0.48,
+                "FP_count": 7
+            },
+            {
+                "threshold": 0.49,
+                "FP_count": 6
+            },
+            {
+                "threshold": 0.5,
+                "FP_count": 5
+            },
+            {
+                "threshold": 0.51,
+                "FP_count": 3
+            },
+            {
+                "threshold": 0.52,
+                "FP_count": 2
+            },
+            {
+                "threshold": 0.53,
+                "FP_count": 1
+            },
+            {
+                "threshold": 0.54,
+                "FP_count": 0
+            },
+            {
+                "threshold": 0.55,
+                "FP_count": 0
+            },
+            {
+                "threshold": 0.56,
+                "FP_count": 0
+            },
+            {
+                "threshold": 0.57,
+                "FP_count": 0
+            },
+            {
+                "threshold": 0.58,
+                "FP_count": 0
+            },
+            {
+                "threshold": 0.59,
+                "FP_count": 0
+            },
+            {
+                "threshold": 0.6,
+                "FP_count": 0
+            },
+            {
+                "threshold": 0.61,
+                "FP_count": 0
+            },
+            {
+                "threshold": 0.62,
+                "FP_count": 0
+            },
+            {
+                "threshold": 0.63,
+                "FP_count": 0
+            },
+            {
+                "threshold": 0.64,
+                "FP_count": 0
+            },
+            {
+                "threshold": 0.65,
+                "FP_count": 0
+            },
+            {
+                "threshold": 0.66,
+                "FP_count": 0
+            },
+            {
+                "threshold": 0.67,
+                "FP_count": 0
+            },
+            {
+                "threshold": 0.68,
+                "FP_count": 0
+            },
+            {
+                "threshold": 0.69,
+                "FP_count": 0
+            },
+            {
+                "threshold": 0.7,
+                "FP_count": 0
+            },
+            {
+                "threshold": 0.71,
+                "FP_count": 0
+            },
+            {
+                "threshold": 0.72,
+                "FP_count": 0
+            },
+            {
+                "threshold": 0.73,
+                "FP_count": 0
+            },
+            {
+                "threshold": 0.74,
+                "FP_count": 0
+            },
+            {
+                "threshold": 0.75,
+                "FP_count": 0
+            },
+            {
+                "threshold": 0.76,
+                "FP_count": 0
+            },
+            {
+                "threshold": 0.77,
+                "FP_count": 0
+            },
+            {
+                "threshold": 0.78,
+                "FP_count": 0
+            },
+            {
+                "threshold": 0.79,
+                "FP_count": 0
+            },
+            {
+                "threshold": 0.8,
+                "FP_count": 0
+            }
+        ],
+        "top_10_FP_qids": [
+            {
+                "qid": 3112,
+                "exist_score": 0.5368
+            },
+            {
+                "qid": 550,
+                "exist_score": 0.5231
+            },
+            {
+                "qid": 5848,
+                "exist_score": 0.5174
+            },
+            {
+                "qid": 1759,
+                "exist_score": 0.5058
+            },
+            {
+                "qid": 641,
+                "exist_score": 0.5035
+            },
+            {
+                "qid": 24,
+                "exist_score": 0.4939
+            },
+            {
+                "qid": 5228,
+                "exist_score": 0.4832
+            },
+            {
+                "qid": 2365,
+                "exist_score": 0.4735
+            },
+            {
+                "qid": 1740,
+                "exist_score": 0.4674
+            },
+            {
+                "qid": 38,
+                "exist_score": 0.4582
+            }
+        ]
+    },
+    {
+        "mode": "rejection_FN",
+        "total_positive": 255,
+        "FN_count_at_0.4": 97,
+        "TP_count_at_0.4": 158,
+        "FN_rate_at_0.4": 0.3804,
+        "FN_by_scenario": {
+            "single": 51,
+            "multi": 46
+        },
+        "score_distribution": {
+            "mean": 0.5909,
+            "std": 0.2814,
+            "min": 0.3055,
+            "max": 1.0
+        }
+    },
+    {
+        "mode": "multi_moment_miss",
+        "num_multi_queries": 90,
+        "total_gt_moments": 200,
+        "total_matched_iou50": 59,
+        "total_missed_iou50": 141,
+        "first_moment_hit_rate_iou50": 0.0333,
+        "rest_moments_hit_rate_iou50": 0.0909,
+        "only_first_hit_proportion": 0.4556,
+        "multi_recall_iou50": 0.295,
+        "error_breakdown": {
+            "multi_total_miss": 41,
+            "multi_partial_miss": 45,
+            "multi_hit_plus_extra": 4
+        }
+    },
+    {
+        "mode": "multiple_detections",
+        "num_positive": 255,
+        "queries_with_extra_preds_iou50": 255,
+        "multi_det_rate_iou50": 1.0,
+        "extra_pred_distribution": {
+            "mean": 9.49,
+            "max": 10,
+            "total_extra": 2419
+        }
+    },
+    {
+        "mode": "inaccurate_boundaries",
+        "num_matched_pairs": 365,
+        "iou_stats": {
+            "mean": 0.0881,
+            "median": 0.0,
+            "std": 0.2048
+        },
+        "near_miss_0.3_0.5": 19,
+        "near_miss_pct": 0.0521,
+        "good_match_ge_0.5": 29,
+        "good_match_pct": 0.0795,
+        "poor_match_lt_0.3": 317,
+        "poor_match_pct": 0.8685,
+        "iou_histogram": {
+            "0.0-0.1": 295,
+            "0.1-0.2": 11,
+            "0.2-0.3": 11,
+            "0.3-0.4": 9,
+            "0.4-0.5": 10,
+            "0.5-0.6": 7,
+            "0.6-0.7": 9,
+            "0.7-0.8": 9,
+            "0.8-0.9": 2,
+            "0.9-1.0": 2
+        }
+    },
+    {
+        "total_queries": 465,
+        "ranked_bottlenecks": [
+            {
+                "mode": "multiple_detections",
+                "affected_queries": 255,
+                "pct_of_total": 0.5484
+            },
+            {
+                "mode": "rejection_FN",
+                "affected_queries": 97,
+                "pct_of_total": 0.2086
+            },
+            {
+                "mode": "multi_moment_miss",
+                "affected_queries": 90,
+                "missed_gt_moments": 141,
+                "only_first_hit_pct": 0.4556,
+                "pct_of_total": 0.1935
+            },
+            {
+                "mode": "rejection_FP",
+                "affected_queries": 63,
+                "pct_of_total": 0.1355
+            },
+            {
+                "mode": "inaccurate_boundaries",
+                "affected_queries": 19,
+                "near_miss_pct": 0.0521,
+                "pct_of_total": 0.0409
+            }
+        ],
+        "primary_bottleneck": "multiple_detections",
+        "summary_sentence": "Primary bottleneck: multiple_detections (affects 54.8% of queries)"
+    }
+]

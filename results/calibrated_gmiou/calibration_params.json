@@ -1,0 +1,7 @@
+{
+    "temperature": 0.7,
+    "threshold": 0.37,
+    "method": "max_gmiou",
+    "val_null_mean": 0.3894,
+    "val_pos_mean": 0.5909
+}

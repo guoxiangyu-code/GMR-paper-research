@@ -1,0 +1,42 @@
+{
+    "error_type_counts": {
+        "single_hit_plus_extra": 161,
+        "correct_reject": 321,
+        "single_miss": 223,
+        "rejection_FP": 171,
+        "multi_partial_miss": 79,
+        "multi_total_miss": 64,
+        "multi_hit_plus_extra": 17
+    },
+    "scenario_counts": {
+        "single": 384,
+        "null_set": 492,
+        "multi": 160
+    },
+    "iou_histogram_forced_matches": {
+        "0.0-0.1": 585,
+        "0.1-0.2": 19,
+        "0.2-0.3": 27,
+        "0.3-0.4": 25,
+        "0.4-0.5": 24,
+        "0.5-0.6": 16,
+        "0.6-0.7": 26,
+        "0.7-0.8": 17,
+        "0.8-0.9": 5,
+        "0.9-1.0": 6
+    },
+    "null_set_exist_scores": {
+        "count": 492,
+        "mean": 0.3941,
+        "std": 0.041,
+        "min": 0.3044,
+        "max": 0.594
+    },
+    "positive_exist_scores": {
+        "count": 544,
+        "mean": 0.6377,
+        "std": 0.2957,
+        "min": 0.3127,
+        "max": 1.0
+    }
+}

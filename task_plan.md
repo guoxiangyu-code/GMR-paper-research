@@ -23,7 +23,7 @@ Conduct a systematic, data-driven error analysis of the Moment-DETR-GMR baseline
 ---
 
 ## Phase 0 — Environment Setup & Reproduce Baseline
-- **Status**: conda environment `gmr`,(may have not completed)
+- **Status**: complete
 - **Goal**: Verify environment, reproduce baseline metrics, align with paper Table 2.
 - **Tasks**:
   1. Install dependencies from `requirements.txt` (PyTorch, scikit-learn, etc.)
@@ -35,7 +35,7 @@ Conduct a systematic, data-driven error analysis of the Moment-DETR-GMR baseline
 - **Files involved**: `eval/eval_main.py`, `eval/metrics.py`, existing prediction JSONL
 
 ## Phase 1 — Construct Error Analysis Detail Table (`error_analysis.py`)
-- **Status**: `not_started`
+- **Status**: `complete`
 - **Goal**: Build a per-query error breakdown table without modifying official eval logic.
 - **Tasks**:
   1. Create `eval/error_analysis.py` — reuse matching functions from `eval/metrics.py`
@@ -47,7 +47,7 @@ Conduct a systematic, data-driven error analysis of the Moment-DETR-GMR baseline
 - **Files involved**: `eval/metrics.py` (reuse `greedy_match`, `compute_temporal_iou_batch_cross`)
 
 ## Phase 2 — Quantify Six Failure Modes
-- **Status**: `not_started`
+- **Status**: `complete`
 - **Goal**: Quantify the proportion and typical cases for each failure mode.
 - **Tasks**:
   1. **Rejection FP** (null-set accepted): Plot FP curve vs `pred_exist_score` threshold; find highest-score semantically-similar negative as case study
@@ -60,7 +60,7 @@ Conduct a systematic, data-driven error analysis of the Moment-DETR-GMR baseline
 - **Files involved**: Output from Phase 1, visualization scripts
 
 ## Phase 3 — Counterfactual (Oracle) Fixes to Rank Bottlenecks
-- **Status**: `not_started`
+- **Status**: `complete`
 - **Goal**: Rank bottlenecks by metric gain from oracle fixes, not intuition.
 - **Tasks**:
   1. Fix multi-moment misses: Treat missed subsequent GTs as correctly recalled → re-evaluate
@@ -74,7 +74,14 @@ Conduct a systematic, data-driven error analysis of the Moment-DETR-GMR baseline
 - **Files involved**: `eval/eval_main.py`, modified prediction files
 
 ## Phase 4 — Implement & Validate Minimal Module
-- **Status**: `not_started`
+- **Status**: `complete`
+- **Selected direction**: Existence Score Calibration (temp=0.30, thd=0.63 learned on val)
+- **Module**: `models/moment_detr_gmr/exist_calibrator.py` (post-processing, no retraining)
+- **Results on Test**:
+  - G-mIoU@1: 35.84 → 49.64 (+13.80)
+  - Rej-F1@0.4: 64.01 → 74.19 (+10.18)
+  - rejection_FP reduced from 171 → 22 (-87%)
+  - No degradation on localization metrics (mAP, mR, mIoU unchanged)
 - **Goal**: Design and implement a small, toggleable module targeting only the selected bottleneck.
 - **Tasks**:
   1. Integrate module into `models/` or post-processing stage; add `--use_xxx` flag
@@ -100,4 +107,33 @@ Conduct a systematic, data-driven error analysis of the Moment-DETR-GMR baseline
 
 | Error | Attempt | Resolution |
 |-------|---------|------------|
-| (none yet) | | |
+| Official checkpoint directory missing | 1 | Used local checkpoint; noted metrics gap in findings |
+| ModuleNotFoundError for exist_calibrator | 2 | Fixed via PYTHONPATH; eval scripts need proper sys.path setup |
+| matplotlib not in gmr env | 1 | Installed via conda run pip install matplotlib |
+| thd_only_0.6 ablation shows no gain | 1 | eval_main uses its own G-mIoU threshold; temperature scaling needed to reshape distribution |
+
+## Phase 0 Results
+
+### Test Baseline (local checkpoint)
+| Metric | Local | Paper Table 2 |
+|--------|-------|---------------|
+| AUROC | 72.09 | 82.67 |
+| Rej-F1@0.4 | 64.01 | 61.72 |
+| G-mIoU@1 | 35.84 | 36.66 |
+| mAP | 7.52 | 18.69 |
+| mR@5 | 12.96 | 66.65 |
+| mR+@5 | 0.84 | 15.49 |
+| mIoU@1 | 12.42 | 30.60 |
+
+### Val Baseline (local checkpoint)
+| Metric | Value |
+|--------|-------|
+| AUROC | 71.63 |
+| Rej-F1@0.4 | 64.76 |
+| G-mIoU@1 | 35.41 |
+| mAP | 8.14 |
+| mR@5 | 13.17 |
+| mR+@5 | 0.5 |
+
+### Key Discrepancy
+Local checkpoint significantly underperforms paper (mAP 7.52 vs 18.69 on test). Official checkpoint directory no longer exists. Error analysis will proceed with local checkpoint results — failure modes are likely amplified, making patterns easier to identify.

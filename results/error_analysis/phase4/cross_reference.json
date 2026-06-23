@@ -1,0 +1,20 @@
+{
+    "baseline_error_counts": {
+        "single_hit_plus_extra": 161,
+        "correct_reject": 321,
+        "single_miss": 223,
+        "rejection_FP": 171,
+        "multi_partial_miss": 79,
+        "multi_total_miss": 64,
+        "multi_hit_plus_extra": 17
+    },
+    "calibrated_error_counts": {
+        "single_hit_plus_extra": 161,
+        "correct_reject": 470,
+        "single_miss": 223,
+        "multi_partial_miss": 79,
+        "rejection_FP": 22,
+        "multi_total_miss": 64,
+        "multi_hit_plus_extra": 17
+    }
+}
