@@ -29,3 +29,7 @@ Thumbs.db
 # Evaluation outputs
 *_result*.json
 *.out.json
+
+# Data directories (too large for GitHub)
+features/
+soccer_gmr_dataset/

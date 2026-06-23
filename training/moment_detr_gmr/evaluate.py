@@ -155,6 +155,7 @@ def setup_model(opt):
     return model, criterion, optimizer, lr_scheduler
 
 def build_dataset_config(opt, data_path, load_labels):
+    keep_empty_gt = bool(getattr(opt, "use_exist_head", False)) if load_labels else True
     return EasyDict(
         dset_name=opt.dset_name,
         domain=None,
@@ -174,7 +175,7 @@ def build_dataset_config(opt, data_path, load_labels):
         span_loss_type=opt.span_loss_type,
         load_labels=load_labels,
         mr_only=True,
-        keep_empty_gt=not load_labels,
+        keep_empty_gt=keep_empty_gt,
     )
 
 def start_inference(opt):
