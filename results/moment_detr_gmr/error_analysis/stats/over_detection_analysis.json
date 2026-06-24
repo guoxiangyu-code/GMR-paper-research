@@ -1,0 +1,29 @@
+{
+  "n_positive": 544,
+  "n_over_detected": 544,
+  "over_det_rate_positive": 100.0,
+  "n_negative": 492,
+  "n_negative_with_preds": 492,
+  "neg_false_window_rate": 100.0,
+  "hit_scores": {
+    "mean": 0.5555,
+    "median": 0.6372
+  },
+  "extra_scores": {
+    "mean": 0.4471,
+    "median": 0.5794
+  },
+  "n_extra_distribution": {
+    "0": 0,
+    "1": 0,
+    "2": 0,
+    "3": 0,
+    "4": 0,
+    "5": 0,
+    "6": 0,
+    "7": 2,
+    "8": 14,
+    "9": 287,
+    "10": 241
+  }
+}

@@ -1,0 +1,449 @@
+{
+  "n_multi_queries": 160,
+  "iou_threshold": 0.5,
+  "summary": {
+    "any_hit_k5": {
+      "count": 59,
+      "rate": 36.9
+    },
+    "first_moment_hit_k5": {
+      "count": 30,
+      "rate": 18.8
+    },
+    "only_first_hit_k5": {
+      "count": 23,
+      "rate": 14.4
+    },
+    "has_subsequent_hits_k5": {
+      "count": 36,
+      "rate": 22.5
+    }
+  },
+  "n_gt_breakdown": {
+    "2": {
+      "count": 128,
+      "any_hit_rate": 33.6,
+      "first_hit_rate": 17.2,
+      "subsequent_hit_rate": 18.8,
+      "only_first_hit_rate": 14.8
+    },
+    "3": {
+      "count": 20,
+      "any_hit_rate": 40.0,
+      "first_hit_rate": 20.0,
+      "subsequent_hit_rate": 30.0,
+      "only_first_hit_rate": 10.0
+    },
+    "4": {
+      "count": 10,
+      "any_hit_rate": 60.0,
+      "first_hit_rate": 30.0,
+      "subsequent_hit_rate": 50.0,
+      "only_first_hit_rate": 10.0
+    },
+    "5+": {
+      "count": 2,
+      "any_hit_rate": 100.0,
+      "first_hit_rate": 50.0,
+      "subsequent_hit_rate": 50.0,
+      "only_first_hit_rate": 50.0
+    }
+  },
+  "n_pred_distribution": {
+    "10": 160
+  },
+  "top_miss_cases": [
+    {
+      "qid": 5266,
+      "vid": "WC2022_3857254_1_980s_1130s",
+      "query": "Locate dribble moments performed by players from Tunisia.",
+      "gt_windows": [
+        [
+          11.0,
+          19.0
+        ],
+        [
+          61.0,
+          69.0
+        ]
+      ],
+      "pred_windows": [
+        [
+          38.0,
+          46.0
+        ],
+        [
+          12.0,
+          20.0
+        ],
+        [
+          130.0,
+          140.0
+        ],
+        [
+          64.0,
+          72.0
+        ],
+        [
+          110.0,
+          118.0
+        ]
+      ],
+      "n_gt": 2
+    },
+    {
+      "qid": 2404,
+      "vid": "WC2022_3857290_1_0s_150s",
+      "query": "Find all clearance moments by players from Cameroon.",
+      "gt_windows": [
+        [
+          66.0,
+          74.0
+        ],
+        [
+          67.0,
+          75.0
+        ]
+      ],
+      "pred_windows": [
+        [
+          38.0,
+          48.0
+        ],
+        [
+          130.0,
+          140.0
+        ],
+        [
+          64.0,
+          72.0
+        ],
+        [
+          110.0,
+          120.0
+        ],
+        [
+          12.0,
+          20.0
+        ]
+      ],
+      "n_gt": 2
+    },
+    {
+      "qid": 6503,
+      "vid": "WC2022_3857281_2_2840s_2990s",
+      "query": "Find all clearance moments by players from Croatia.",
+      "gt_windows": [
+        [
+          41.0,
+          49.0
+        ],
+        [
+          50.0,
+          58.0
+        ]
+      ],
+      "pred_windows": [
+        [
+          40.0,
+          50.0
+        ],
+        [
+          66.0,
+          74.0
+        ],
+        [
+          128.0,
+          134.0
+        ],
+        [
+          16.0,
+          22.0
+        ],
+        [
+          106.0,
+          114.0
+        ]
+      ],
+      "n_gt": 2
+    },
+    {
+      "qid": 27,
+      "vid": "WC2022_3857258_1_1260s_1410s",
+      "query": "Find block moments by players from Brazil.",
+      "gt_windows": [
+        [
+          37.0,
+          45.0
+        ],
+        [
+          89.0,
+          97.0
+        ]
+      ],
+      "pred_windows": [
+        [
+          132.0,
+          142.0
+        ],
+        [
+          36.0,
+          46.0
+        ],
+        [
+          62.0,
+          70.0
+        ],
+        [
+          112.0,
+          120.0
+        ],
+        [
+          10.0,
+          18.0
+        ]
+      ],
+      "n_gt": 2
+    },
+    {
+      "qid": 6915,
+      "vid": "WC2022_3857283_2_3680s_3830s",
+      "query": "Find block moments performed by players from Morocco.",
+      "gt_windows": [
+        [
+          38.0,
+          46.0
+        ],
+        [
+          48.0,
+          56.0
+        ]
+      ],
+      "pred_windows": [
+        [
+          132.0,
+          142.0
+        ],
+        [
+          36.0,
+          46.0
+        ],
+        [
+          62.0,
+          70.0
+        ],
+        [
+          10.0,
+          18.0
+        ],
+        [
+          112.0,
+          120.0
+        ]
+      ],
+      "n_gt": 2
+    },
+    {
+      "qid": 5865,
+      "vid": "WC2022_3857258_1_1400s_1550s",
+      "query": "Locate clearance moments performed by players from Serbia.",
+      "gt_windows": [
+        [
+          36.0,
+          44.0
+        ],
+        [
+          119.0,
+          127.0
+        ]
+      ],
+      "pred_windows": [
+        [
+          36.0,
+          46.0
+        ],
+        [
+          130.0,
+          140.0
+        ],
+        [
+          62.0,
+          70.0
+        ],
+        [
+          12.0,
+          20.0
+        ],
+        [
+          108.0,
+          118.0
+        ]
+      ],
+      "n_gt": 2
+    },
+    {
+      "qid": 4234,
+      "vid": "WC2022_3857254_1_1680s_1830s",
+      "query": "Find interception moments by players from Tunisia.",
+      "gt_windows": [
+        [
+          10.0,
+          18.0
+        ],
+        [
+          47.0,
+          55.0
+        ]
+      ],
+      "pred_windows": [
+        [
+          36.0,
+          46.0
+        ],
+        [
+          132.0,
+          142.0
+        ],
+        [
+          64.0,
+          72.0
+        ],
+        [
+          10.0,
+          18.0
+        ],
+        [
+          112.0,
+          122.0
+        ]
+      ],
+      "n_gt": 2
+    },
+    {
+      "qid": 6909,
+      "vid": "WC2022_3857285_1_2660s_2810s",
+      "query": "Find clearance moments by players from Senegal.",
+      "gt_windows": [
+        [
+          13.0,
+          21.0
+        ],
+        [
+          20.0,
+          28.0
+        ],
+        [
+          120.0,
+          128.0
+        ],
+        [
+          125.0,
+          133.0
+        ],
+        [
+          141.0,
+          149.0
+        ]
+      ],
+      "pred_windows": [
+        [
+          40.0,
+          48.0
+        ],
+        [
+          130.0,
+          138.0
+        ],
+        [
+          64.0,
+          74.0
+        ],
+        [
+          14.0,
+          22.0
+        ],
+        [
+          110.0,
+          118.0
+        ]
+      ],
+      "n_gt": 5
+    },
+    {
+      "qid": 3100,
+      "vid": "WC2022_3857258_2_3680s_3830s",
+      "query": "Find dribble moments performed by players from Brazil.",
+      "gt_windows": [
+        [
+          14.0,
+          22.0
+        ],
+        [
+          27.0,
+          35.0
+        ]
+      ],
+      "pred_windows": [
+        [
+          40.0,
+          48.0
+        ],
+        [
+          132.0,
+          140.0
+        ],
+        [
+          64.0,
+          74.0
+        ],
+        [
+          12.0,
+          20.0
+        ],
+        [
+          112.0,
+          120.0
+        ]
+      ],
+      "n_gt": 2
+    },
+    {
+      "qid": 856,
+      "vid": "WC2022_3857268_1_1120s_1270s",
+      "query": "Locate all foul committed actions by players from Canada.",
+      "gt_windows": [
+        [
+          34.0,
+          42.0
+        ],
+        [
+          143.0,
+          150.0
+        ]
+      ],
+      "pred_windows": [
+        [
+          132.0,
+          142.0
+        ],
+        [
+          36.0,
+          44.0
+        ],
+        [
+          62.0,
+          70.0
+        ],
+        [
+          10.0,
+          18.0
+        ],
+        [
+          112.0,
+          122.0
+        ]
+      ],
+      "n_gt": 2
+    }
+  ]
+}

@@ -1,0 +1,328 @@
+{
+  "threshold": 0.55,
+  "fn_count": 238,
+  "positive_count": 544,
+  "fn_ratio": 43.75,
+  "fn_single": 131,
+  "fn_multi": 107,
+  "tp_count": 306,
+  "fn_exist_score_stats": {
+    "mean": 0.4923567226890756,
+    "median": 0.49465,
+    "max": 0.5495
+  },
+  "top20_fn_cases": [
+    {
+      "qid": 4782,
+      "vid": "WC2022_3857289_1_280s_430s",
+      "query": "Find block moments performed by players from Argentina.",
+      "exist_score": 0.4008,
+      "gt_windows": [
+        [
+          130.0,
+          138.0
+        ]
+      ],
+      "n_gt": 1,
+      "is_multi": false
+    },
+    {
+      "qid": 1442,
+      "vid": "WC2022_3857255_2_3260s_3410s",
+      "query": "Locate substitution moments performed by players from Spain.",
+      "exist_score": 0.4019,
+      "gt_windows": [
+        [
+          100.0,
+          108.0
+        ],
+        [
+          111.0,
+          119.0
+        ]
+      ],
+      "n_gt": 2,
+      "is_multi": true
+    },
+    {
+      "qid": 817,
+      "vid": "WC2022_3857255_2_3260s_3410s",
+      "query": "Find interception moments performed by players from Japan.",
+      "exist_score": 0.4061,
+      "gt_windows": [
+        [
+          0.0,
+          6.0
+        ]
+      ],
+      "n_gt": 1,
+      "is_multi": false
+    },
+    {
+      "qid": 4318,
+      "vid": "WC2022_3857270_2_4240s_4390s",
+      "query": "Find substitution moments performed by players from Uruguay.",
+      "exist_score": 0.4083,
+      "gt_windows": [
+        [
+          59.0,
+          67.0
+        ],
+        [
+          133.0,
+          141.0
+        ]
+      ],
+      "n_gt": 2,
+      "is_multi": true
+    },
+    {
+      "qid": 3242,
+      "vid": "WC2022_3857289_2_3820s_3970s",
+      "query": "Find all substitution moments performed by players from Mexico.",
+      "exist_score": 0.4167,
+      "gt_windows": [
+        [
+          95.0,
+          103.0
+        ],
+        [
+          96.0,
+          104.0
+        ]
+      ],
+      "n_gt": 2,
+      "is_multi": true
+    },
+    {
+      "qid": 761,
+      "vid": "WC2022_3857255_2_3960s_4110s",
+      "query": "Find all substitution moments performed by players from Spain.",
+      "exist_score": 0.4211,
+      "gt_windows": [
+        [
+          67.0,
+          75.0
+        ]
+      ],
+      "n_gt": 1,
+      "is_multi": false
+    },
+    {
+      "qid": 1426,
+      "vid": "WC2022_3857255_2_3260s_3410s",
+      "query": "Locate all interception actions by players from Spain.",
+      "exist_score": 0.4216,
+      "gt_windows": [
+        [
+          0.0,
+          8.0
+        ]
+      ],
+      "n_gt": 1,
+      "is_multi": false
+    },
+    {
+      "qid": 1662,
+      "vid": "WC2022_3857258_2_2840s_2990s",
+      "query": "Find dribble moments performed by players from Serbia.",
+      "exist_score": 0.4239,
+      "gt_windows": [
+        [
+          23.0,
+          31.0
+        ],
+        [
+          37.0,
+          45.0
+        ]
+      ],
+      "n_gt": 2,
+      "is_multi": true
+    },
+    {
+      "qid": 6491,
+      "vid": "WC2022_3857266_2_3680s_3830s",
+      "query": "Locate substitution moments by players from France.",
+      "exist_score": 0.4258,
+      "gt_windows": [
+        [
+          33.0,
+          41.0
+        ]
+      ],
+      "n_gt": 1,
+      "is_multi": false
+    },
+    {
+      "qid": 2511,
+      "vid": "WC2022_3857290_1_140s_290s",
+      "query": "Locate block moments performed by players from Cameroon.",
+      "exist_score": 0.4263,
+      "gt_windows": [
+        [
+          30.0,
+          38.0
+        ],
+        [
+          52.0,
+          60.0
+        ]
+      ],
+      "n_gt": 2,
+      "is_multi": true
+    },
+    {
+      "qid": 1312,
+      "vid": "WC2022_3857256_2_3960s_4110s",
+      "query": "Locate substitution moments performed by players from Serbia.",
+      "exist_score": 0.4312,
+      "gt_windows": [
+        [
+          53.0,
+          61.0
+        ]
+      ],
+      "n_gt": 1,
+      "is_multi": false
+    },
+    {
+      "qid": 3489,
+      "vid": "WC2022_3857283_2_4240s_4390s",
+      "query": "Locate substitution moments by players from Morocco.",
+      "exist_score": 0.4318,
+      "gt_windows": [
+        [
+          52.0,
+          60.0
+        ],
+        [
+          54.0,
+          62.0
+        ]
+      ],
+      "n_gt": 2,
+      "is_multi": true
+    },
+    {
+      "qid": 3400,
+      "vid": "WC2022_3857290_2_5360s_5510s",
+      "query": "Find all substitution moments performed by players from Switzerland.",
+      "exist_score": 0.4328,
+      "gt_windows": [
+        [
+          27.0,
+          35.0
+        ]
+      ],
+      "n_gt": 1,
+      "is_multi": false
+    },
+    {
+      "qid": 3685,
+      "vid": "WC2022_3857258_1_0s_150s",
+      "query": "Identify all foul committed moments performed by players from Brazil.",
+      "exist_score": 0.435,
+      "gt_windows": [
+        [
+          39.0,
+          47.0
+        ],
+        [
+          59.0,
+          67.0
+        ]
+      ],
+      "n_gt": 2,
+      "is_multi": true
+    },
+    {
+      "qid": 6682,
+      "vid": "WC2022_3857270_2_4940s_5090s",
+      "query": "Identify interception moments performed by players from Uruguay.",
+      "exist_score": 0.439,
+      "gt_windows": [
+        [
+          92.0,
+          100.0
+        ]
+      ],
+      "n_gt": 1,
+      "is_multi": false
+    },
+    {
+      "qid": 1864,
+      "vid": "WC2022_3857260_1_1960s_2110s",
+      "query": "Find shot moments performed by players from Mexico.",
+      "exist_score": 0.4411,
+      "gt_windows": [
+        [
+          91.0,
+          99.0
+        ],
+        [
+          142.0,
+          150.0
+        ]
+      ],
+      "n_gt": 2,
+      "is_multi": true
+    },
+    {
+      "qid": 4603,
+      "vid": "WC2022_3857267_1_840s_990s",
+      "query": "Find interception moments performed by players from Ecuador.",
+      "exist_score": 0.4411,
+      "gt_windows": [
+        [
+          53.0,
+          61.0
+        ]
+      ],
+      "n_gt": 1,
+      "is_multi": false
+    },
+    {
+      "qid": 1957,
+      "vid": "WC2022_3857293_1_1120s_1270s",
+      "query": "Find bad behaviour moments performed by players from Uruguay.",
+      "exist_score": 0.4413,
+      "gt_windows": [
+        [
+          12.0,
+          20.0
+        ]
+      ],
+      "n_gt": 1,
+      "is_multi": false
+    },
+    {
+      "qid": 6748,
+      "vid": "WC2022_3857268_2_4520s_4670s",
+      "query": "Find interception moments performed by players from Belgium.",
+      "exist_score": 0.4418,
+      "gt_windows": [
+        [
+          116.0,
+          124.0
+        ]
+      ],
+      "n_gt": 1,
+      "is_multi": false
+    },
+    {
+      "qid": 546,
+      "vid": "WC2022_3857268_2_4380s_4530s",
+      "query": "Locate interception moments performed by players from Belgium.",
+      "exist_score": 0.4419,
+      "gt_windows": [
+        [
+          111.0,
+          119.0
+        ]
+      ],
+      "n_gt": 1,
+      "is_multi": false
+    }
+  ]
+}

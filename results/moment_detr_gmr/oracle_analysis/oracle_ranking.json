@@ -1,0 +1,62 @@
+{
+  "gmiou_threshold_used": 0.55,
+  "baseline": {
+    "G-mIoU@1": 39.31,
+    "mAP": 8.09,
+    "Rej-F1": 67.15
+  },
+  "ranked_by_gmiou_gain": [
+    {
+      "name": "Fix All",
+      "G-mIoU@1": 91.66,
+      "mAP": 100.0,
+      "Rej-F1": 100.0,
+      "G-mIoU@1_gain": 52.349999999999994,
+      "mAP_gain": 91.91,
+      "Rej-F1_gain": 32.849999999999994
+    },
+    {
+      "name": "Fix Over-detection",
+      "G-mIoU@1": 58.23,
+      "mAP": 20.64,
+      "Rej-F1": 67.15,
+      "G-mIoU@1_gain": 18.919999999999995,
+      "mAP_gain": 12.55,
+      "Rej-F1_gain": 0.0
+    },
+    {
+      "name": "Fix FP",
+      "G-mIoU@1": 51.18,
+      "mAP": 8.09,
+      "Rej-F1": 80.52,
+      "G-mIoU@1_gain": 11.869999999999997,
+      "mAP_gain": 0.0,
+      "Rej-F1_gain": 13.36999999999999
+    },
+    {
+      "name": "Fix Boundary",
+      "G-mIoU@1": 44.43,
+      "mAP": 38.83,
+      "Rej-F1": 67.15,
+      "G-mIoU@1_gain": 5.119999999999997,
+      "mAP_gain": 30.74,
+      "Rej-F1_gain": 0.0
+    },
+    {
+      "name": "Fix Multi-miss",
+      "G-mIoU@1": 39.31,
+      "mAP": 8.09,
+      "Rej-F1": 67.15,
+      "G-mIoU@1_gain": 0.0,
+      "mAP_gain": 0.0,
+      "Rej-F1_gain": 0.0
+    }
+  ],
+  "recommended_direction": "Fix All",
+  "direction_mapping": {
+    "Fix FP": "candidate verification (exist_head calibration / null-set detection)",
+    "Fix Multi-miss": "coverage-aware retrieval (multi-moment detection)",
+    "Fix Boundary": "boundary refinement (temporal boundary regression)",
+    "Fix Over-detection": "NMS / score thresholding post-processing"
+  }
+}

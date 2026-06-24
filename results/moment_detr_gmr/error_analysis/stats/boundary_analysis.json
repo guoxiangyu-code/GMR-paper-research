@@ -1,0 +1,40 @@
+{
+  "n_matched_pairs": 750,
+  "mean_iou": 0.0921,
+  "median_iou": 0.0,
+  "near_miss_count": 47,
+  "near_miss_rate": 6.3,
+  "start_offset_mean": 7.419,
+  "start_offset_std": 53.186,
+  "end_offset_mean": 8.16,
+  "end_offset_std": 53.423,
+  "iou_bin_counts": {
+    "[0,0.1)": 599,
+    "[0.1,0.2)": 21,
+    "[0.2,0.3)": 28,
+    "[0.3,0.4)": 31,
+    "[0.4,0.5)": 16,
+    "[0.5,0.6)": 11,
+    "[0.6,0.7)": 11,
+    "[0.7,0.8)": 10,
+    "[0.8,0.9)": 16,
+    "[0.9,1.01)": 7
+  },
+  "duration_iou_stats": {
+    "<5s": {
+      "count": 122,
+      "mean_iou": 0.123,
+      "median_iou": 0.0
+    },
+    "5-20s": {
+      "count": 625,
+      "mean_iou": 0.0854,
+      "median_iou": 0.0
+    },
+    ">20s": {
+      "count": 3,
+      "mean_iou": 0.2142,
+      "median_iou": 0.1935
+    }
+  }
+}
