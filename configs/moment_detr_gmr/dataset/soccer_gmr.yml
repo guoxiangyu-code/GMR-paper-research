@@ -4,8 +4,8 @@ train_path: data/label/Standard/train.jsonl
 eval_path: data/label/Standard/val.jsonl
 
 lr: 0.00005
-bsz: 8
-eval_bsz: 4
+bsz: 1024
+eval_bsz: 128
 n_epoch: 400
 max_es_cnt: 50
 lw_saliency: 1
