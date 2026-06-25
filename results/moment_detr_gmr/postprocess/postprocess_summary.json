@@ -1,0 +1,30 @@
+{
+  "baseline": {
+    "G-mIoU@1": 39.31,
+    "mAP": 8.09,
+    "mR@5": 14.14,
+    "mR+@5": 0.97,
+    "mIoU@1": 10.37,
+    "Rej-F1": 67.15,
+    "AUROC": 70.0
+  },
+  "best_score_threshold": 0.0,
+  "score_filter_only": {
+    "G-mIoU@1": 39.31,
+    "mAP": 8.09,
+    "mR@5": 14.14,
+    "mR+@5": 0.97,
+    "mIoU@1": 10.37,
+    "Rej-F1": 67.15,
+    "AUROC": 70.0
+  },
+  "combined_score+nms": {
+    "G-mIoU@1": 39.31,
+    "mAP": 8.09,
+    "mR@5": 14.14,
+    "mR+@5": 0.97,
+    "mIoU@1": 10.37,
+    "Rej-F1": 67.15,
+    "AUROC": 70.0
+  }
+}

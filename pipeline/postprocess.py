@@ -4,7 +4,6 @@ Phase 4: Post-processing pipeline for Moment-DETR-GMR.
 
 Two modules:
   4.1  Score threshold + Soft-NMS: filter low-confidence predictions
-  4.2  Existence score calibration (Temperature Scaling)
 
 Since val predictions only cover positive queries (255/465),
 we run parameter sweep on the test set and report test improvements.
@@ -155,26 +154,6 @@ def apply_soft_nms(pred_list: List[Dict], sigma: float = 0.5,
     return fixed
 
 
-# ─── 4.2: Temperature Scaling ─────────────────────────────────────────────────
-
-def apply_temperature_scaling(pred_list: List[Dict], temperature: float) -> List[Dict]:
-    """Recalibrate pred_exist_score via temperature scaling.
-    We need the original logit; approximate via: logit = log(p/(1-p))
-    then rescale: new_score = sigmoid(logit / T).
-    """
-    fixed = []
-    for d in pred_list:
-        d2 = copy.deepcopy(d)
-        s = d.get("pred_exist_score", 0.5)
-        s = max(1e-6, min(1 - 1e-6, s))  # clip for numerical stability
-        logit = np.log(s / (1 - s))
-        new_logit = logit / temperature
-        new_score = float(1 / (1 + np.exp(-new_logit)))
-        d2["pred_exist_score"] = new_score
-        fixed.append(d2)
-    return fixed
-
-
 # ─── Main analysis ────────────────────────────────────────────────────────────
 
 def main():
@@ -233,21 +212,6 @@ def main():
               OUT_DIR / "softnms_sweep.json")
     if best_sigma:
         print(f"\n  Best sigma={best_sigma} → G-mIoU@1={best_nms_gmiou:.2f}")
-
-    # ══════════════════════════════════════════════════════════
-    # 4.2: Temperature Scaling Sweep
-    # ══════════════════════════════════════════════════════════
-    print("\n--- 4.2: Existence Score Temperature Scaling Sweep ---")
-    temp_sweep = []
-    for T in [0.3, 0.5, 0.7, 0.8, 0.9, 1.0, 1.2, 1.5, 2.0, 3.0, 5.0]:
-        # Apply temperature scaling then use optimal exist threshold
-        scaled = apply_temperature_scaling(pred_test, T)
-        m = run_eval(scaled, GT_TEST, tag=f"temp_{T}")
-        temp_sweep.append({"T": T, **m})
-        print(f"  T={T:.1f}  G-mIoU@1={m.get('G-mIoU@1',0):.2f}  "
-              f"Rej-F1={m.get('Rej-F1',0):.2f}  AUROC={m.get('AUROC',0):.2f}")
-
-    save_json({"temp_sweep": temp_sweep}, OUT_DIR / "temperature_sweep.json")
 
     # ══════════════════════════════════════════════════════════
     # 4.3: Best Combined Configuration

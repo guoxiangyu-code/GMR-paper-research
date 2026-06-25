@@ -168,7 +168,7 @@ def main(opt, resume=None):
         opt,
         opt.eval_path,
         load_labels=True,
-        keep_empty_gt=False,
+        keep_empty_gt=True,
     ))
 
     model, criterion, optimizer, lr_scheduler = setup_model(opt)
