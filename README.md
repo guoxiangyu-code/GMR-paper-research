@@ -25,17 +25,11 @@
 | | 5. 边界不精 (Boundary Near-miss) | **6.3% 近失误** | $0.3 \le IoU < 0.5$ 的不精确匹配。匹配框的平均 IoU 仅为 0.27 (部分记录甚至低至 0.09)。 | **定位修复方向**：时序边界回归微调，修复后 mAP 增益可达 **+30.74%** |
 
 
+第一步(最关键,几乎零成本):拒答和定位走两条路。​ 先用 slot 前景计数做样本级判定——若所有 slot 都低于 tau_slot,判空集,输出 [];但一旦判为正样本,就放行原始的 top-k 候选(带分数)去算 mAP/mR/mR+,而不是只留 >0.6 的框。也就是说,空集查询走"全删",正样本查询走"全保留+排序"。这样 G-mIoU 的拒答收益保住(空集不再吐框),mAP/mR 的候选池也保住。你会看到 mAP/mR 立刻回到接近 baseline 的水平,而 G-mIoU 基本不掉。
 
 
+<img width="1548" height="268" alt="image" src="https://github.com/user-attachments/assets/eb050573-b9b2-42cf-ac44-6551522cbb46" />
 
-
-   评估维度   │ 指标项   │ 纯血版 Baseline (无… │ 之前的错误版 Idea 1… │ 现在修复后的 Idea 1 (双轨制放行)
-  ────────────┼──────────┼──────────────────────┼──────────────────────┼──────────────────────────────────
-   打假拒答   │          │ 0.00%                │ 74.50%               │ 74.50%
-   端到端大考 │ G-mIoU@1 │ 4.49%                │ 51.76%               │ 50.83% (保住了巨大收益)
-   单目标定位 │ mAP      │ 8.09%                │ 3.24%                │ 7.11% (成功满血复活！)
-              │ mR@5     │ 14.14%               │ 4.38%                │ 10.27% (大幅回升)
-   多目标增量 │ mR+@5    │ 0.97%                │ 0.00%                │ 1.12% (超越 Baseline！)
 Official repository for **Retrieving Any Relevant Moments: Benchmark and Models for Generalized Moment Retrieval**.
 
 **Generalized Moment Retrieval (GMR)** extends video moment retrieval to a unified setting where a query may correspond to **no moment**, **one moment**, or **multiple moments** in a video. A GMR system must retrieve the complete set of relevant temporal moments, or correctly return an empty set when the queried event is absent.
