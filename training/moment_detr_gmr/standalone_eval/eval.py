@@ -57,7 +57,12 @@ def compute_mr_ap(submission, ground_truth, iou_thds=np.linspace(0.5, 0.95, 10),
             qid2ap_list[qid] = scores
 
     ap_array = np.array(list(qid2ap_list.values()))  # (#queries, #thd)
-    ap_thds = ap_array.mean(0)  # mAP at different IoU thresholds.
+    if len(ap_array) == 0:
+        ap_thds = np.zeros(len(iou_thds))
+    else:
+        if len(ap_array.shape) != 2:
+            ap_array = ap_array.reshape(-1, len(iou_thds))
+        ap_thds = ap_array.mean(0)  # mAP at different IoU thresholds.
     iou_thd2ap = dict(zip([str(e) for e in iou_thds], ap_thds))
     iou_thd2ap["average"] = np.mean(ap_thds)
     iou_thd2ap = {k: float(f"{100 * v:.2f}") for k, v in iou_thd2ap.items()}
@@ -66,7 +71,12 @@ def compute_mr_ap(submission, ground_truth, iou_thds=np.linspace(0.5, 0.95, 10),
 def compute_mr_r1(submission, ground_truth, iou_thds=np.linspace(0.5, 0.95, 10)):
     """If a predicted segment has IoU >= iou_thd with one of the 1st GT segment, we define it positive"""
     iou_thds = [float(f"{e:.2f}") for e in iou_thds]
-    pred_qid2window = {d["qid"]: d["pred_relevant_windows"][0][:2] for d in submission}  # :2 rm scores
+    pred_qid2window = {}
+    for d in submission:
+        if len(d["pred_relevant_windows"]) > 0:
+            pred_qid2window[d["qid"]] = d["pred_relevant_windows"][0][:2]
+        else:
+            pred_qid2window[d["qid"]] = [0.0, 0.0]
     gt_qid2window = {}
     for d in ground_truth:
         cur_gt_windows = d["relevant_windows"]
@@ -85,7 +95,10 @@ def compute_mr_r1(submission, ground_truth, iou_thds=np.linspace(0.5, 0.95, 10))
     pred_gt_iou = compute_temporal_iou_batch_paired(pred_windows, gt_windows)
     iou_thd2recall_at_one = {}
     for thd in iou_thds:
-        iou_thd2recall_at_one[str(thd)] = float(f"{np.mean(pred_gt_iou >= thd) * 100:.2f}")
+        if len(pred_gt_iou) == 0:
+            iou_thd2recall_at_one[str(thd)] = 0.0
+        else:
+            iou_thd2recall_at_one[str(thd)] = float(f"{np.mean(pred_gt_iou >= thd) * 100:.2f}")
     return iou_thd2recall_at_one
 
 def get_window_len(window):

@@ -12,6 +12,9 @@ from models.moment_detr_gmr.misc import accuracy
 from models.moment_detr_gmr.moment_transformer import build_transformer
 from models.moment_detr_gmr.gmr_adapter import GMRAdapter, compute_existence_loss
 
+from models.moment_detr_gmr.slot_existence_head import SlotExistenceHead, existence_loss, aggregate_existence, infer_with_slot_rejection
+
+
 class MomentDETR(nn.Module):
     """ This is the Moment-DETR module that performs moment localization. """
 
@@ -44,6 +47,7 @@ class MomentDETR(nn.Module):
         span_pred_dim = 2 if span_loss_type == "l1" else max_v_l * 2
         self.span_embed = MLP(hidden_dim, hidden_dim, span_pred_dim, 3)
         self.class_embed = nn.Linear(hidden_dim, 2)  # 0: background, 1: foreground
+        self.slot_exist_head = SlotExistenceHead(hidden_dim) # Idea 1
         self.use_txt_pos = use_txt_pos
         self.n_input_proj = n_input_proj
         self.query_embed = nn.Embedding(num_queries, hidden_dim)
@@ -104,6 +108,12 @@ class MomentDETR(nn.Module):
         if self.span_loss_type == "l1":
             outputs_coord = outputs_coord.sigmoid()
         out = {'pred_logits': outputs_class[-1], 'pred_spans': outputs_coord[-1]}
+
+        slot_fg_logit, slot_fg_prob = self.slot_exist_head(hs[-1])
+        out["slot_fg_logit"] = slot_fg_logit
+        out["slot_fg_prob"] = slot_fg_prob
+        _, prob_any, _ = aggregate_existence(slot_fg_prob)
+        out["pred_exist_score"] = prob_any
 
         if self.exist_head is not None:
             out["pred_exist_logits"] = self.exist_head(hs[-1])
@@ -258,6 +268,27 @@ class SetCriterion(nn.Module):
         losses = {}
         for loss in self.losses:
             losses.update(self.get_loss(loss, outputs, targets, indices))
+            
+        # Idea1: Slot Existence Loss
+        B = outputs["pred_spans"].size(0)
+        device = outputs["pred_spans"].device
+        matched_slot_idx = []
+        gt_is_empty = []
+        span_labels_list = targets.get("span_labels", [{} for _ in range(B)])
+        for b in range(B):
+            tgt_spans = span_labels_list[b].get("spans", torch.empty((0,2), device=device))
+            is_empty = (tgt_spans.numel() == 0)
+            gt_is_empty.append(is_empty)
+            if is_empty:
+                matched_slot_idx.append(torch.empty(0, dtype=torch.long, device=device))
+            else:
+                p_idx = torch.tensor([src for src, tgt in zip(*indices[b])], dtype=torch.long, device=device)
+                matched_slot_idx.append(p_idx)
+                
+        l_slot, slot_dict = existence_loss(outputs["slot_fg_logit"], outputs["slot_fg_prob"], matched_slot_idx, gt_is_empty)
+        losses["loss_slot"] = l_slot
+        if "loss_slot" not in self.weight_dict:
+            self.weight_dict["loss_slot"] = 1.0
 
         if 'aux_outputs' in outputs:
             for i, aux_outputs in enumerate(outputs['aux_outputs']):

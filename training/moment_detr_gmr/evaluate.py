@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+
 import argparse
 import logging
 import os
@@ -24,6 +25,7 @@ from models.moment_detr_gmr.moment_detr import build_model as build_model_moment
 from models.moment_detr_gmr.gmr_adapter import apply_existence_gate
 from models.moment_detr_gmr.utils.basic_utils import AverageMeter, save_json, save_jsonl
 from models.moment_detr_gmr.utils.span_utils import span_cxw_to_xx
+from models.moment_detr_gmr.slot_existence_head import infer_with_slot_rejection
 from postprocessing import PostProcessorDETR
 from standalone_eval.eval import eval_submission
 
@@ -76,11 +78,24 @@ def compute_mr_results(epoch_i, model, eval_loader, opt, criterion=None):
                 hard=getattr(opt, "hard_exist_gate", False),
             )
 
+        slot_fg_prob = outputs["slot_fg_prob"].cpu()
+        preds_slot_list = infer_with_slot_rejection(slot_fg_prob, pred_spans, tau_slot=0.5)
+
         for idx, (meta, spans, score) in enumerate(zip(query_meta, pred_spans, scores)):
-            spans = span_cxw_to_xx(spans) * meta["duration"]
-            cur_ranked_preds = torch.cat([spans, score[:, None]], dim=1).tolist()
-            cur_ranked_preds = sorted(cur_ranked_preds, key=lambda x: x[2], reverse=True)
-            cur_ranked_preds = [[float(f"{e:.4f}") for e in row] for row in cur_ranked_preds]
+            # Fallback to standard ranking if no rejection
+            preds_slot = preds_slot_list[idx]
+            
+            if len(preds_slot) == 0:
+                cur_ranked_preds = []
+            else:
+                # Still output cxw to xx
+                spans_xx = span_cxw_to_xx(spans) * meta["duration"]
+                cur_ranked_preds = torch.cat([spans_xx, score[:, None]], dim=1).tolist()
+                cur_ranked_preds = sorted(cur_ranked_preds, key=lambda x: x[2], reverse=True)
+                cur_ranked_preds = [[float(f"{e:.4f}") for e in row] for row in cur_ranked_preds]
+                # Filter by slot rejection? Actually infer_with_slot_rejection does the selection.
+                # To be exact with Idea 1: if len=0, reject. If not, we just output the original top N.
+                # Because Idea 1 only acts as a strong rejector.
 
             cur_query_pred = {
                 "qid": meta["qid"],
@@ -88,7 +103,9 @@ def compute_mr_results(epoch_i, model, eval_loader, opt, criterion=None):
                 "vid": meta["vid"],
                 "pred_relevant_windows": cur_ranked_preds,
             }
-            if pred_exist_scores is not None:
+            if "pred_exist_score" in outputs:
+                cur_query_pred["pred_exist_score"] = float(f"{float(outputs['pred_exist_score'][idx]):.4f}")
+            elif pred_exist_scores is not None:
                 cur_query_pred["pred_exist_score"] = float(f"{float(pred_exist_scores[idx]):.4f}")
             mr_res.append(cur_query_pred)
 
@@ -155,6 +172,7 @@ def setup_model(opt):
     return model, criterion, optimizer, lr_scheduler
 
 def build_dataset_config(opt, data_path, load_labels):
+    keep_empty_gt = bool(getattr(opt, "use_exist_head", False)) if load_labels else True
     return EasyDict(
         dset_name=opt.dset_name,
         domain=None,
@@ -174,7 +192,7 @@ def build_dataset_config(opt, data_path, load_labels):
         span_loss_type=opt.span_loss_type,
         load_labels=load_labels,
         mr_only=True,
-        keep_empty_gt=not load_labels,
+        keep_empty_gt=keep_empty_gt,
     )
 
 def start_inference(opt):
