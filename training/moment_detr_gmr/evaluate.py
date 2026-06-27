@@ -78,24 +78,15 @@ def compute_mr_results(epoch_i, model, eval_loader, opt, criterion=None):
                 hard=getattr(opt, "hard_exist_gate", False),
             )
 
-        slot_fg_prob = outputs["slot_fg_prob"].cpu()
-        preds_slot_list = infer_with_slot_rejection(slot_fg_prob, pred_spans, tau_slot=0.5)
+        # slot_fg_prob = outputs["slot_fg_prob"].cpu()
+        # preds_slot_list = infer_with_slot_rejection(slot_fg_prob, pred_spans, tau_slot=0.5)
 
         for idx, (meta, spans, score) in enumerate(zip(query_meta, pred_spans, scores)):
-            # Fallback to standard ranking if no rejection
-            preds_slot = preds_slot_list[idx]
-            
-            if len(preds_slot) == 0:
-                cur_ranked_preds = []
-            else:
-                # Still output cxw to xx
-                spans_xx = span_cxw_to_xx(spans) * meta["duration"]
-                cur_ranked_preds = torch.cat([spans_xx, score[:, None]], dim=1).tolist()
-                cur_ranked_preds = sorted(cur_ranked_preds, key=lambda x: x[2], reverse=True)
-                cur_ranked_preds = [[float(f"{e:.4f}") for e in row] for row in cur_ranked_preds]
-                # Filter by slot rejection? Actually infer_with_slot_rejection does the selection.
-                # To be exact with Idea 1: if len=0, reject. If not, we just output the original top N.
-                # Because Idea 1 only acts as a strong rejector.
+            # Always output all N spans with their original scores
+            spans_xx = span_cxw_to_xx(spans) * meta["duration"]
+            cur_ranked_preds = torch.cat([spans_xx, score[:, None]], dim=1).tolist()
+            cur_ranked_preds = sorted(cur_ranked_preds, key=lambda x: x[2], reverse=True)
+            cur_ranked_preds = [[float(f"{e:.4f}") for e in row] for row in cur_ranked_preds]
 
             cur_query_pred = {
                 "qid": meta["qid"],
