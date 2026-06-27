@@ -1,5 +1,30 @@
 # Generalized Moment Retrieval
 
+
+# Moment-DETR-GMR 综合数据全景表
+
+本表汇总了当前 Moment-DETR-GMR 在测试集上的全面数据，包含任务参数、核心指标、细粒度错误分布及理想情况（Oracle）下的可修复上限。
+
+| 数据维度 | 核心项目 / 指标 | 当前数据值 | 数据细节与上下文说明 | Oracle 理论上限 / 修复建议 |
+| :--- | :--- | :--- | :--- | :--- |
+| **I. 核心执行参数** | 模型架构 | **Moment-DETR-GMR** | 带有存在性预测头（`exist_head=True`） | - |
+| | 数据集 / 分割 | **Soccer-GMR** | 测试集共 1036 个 Query (544正样本，492空集负样本) | - |
+| | 视频/文本特征 | **CLIP + SlowFast** | video_feat_dim=2818, text_feat_dim=512 | - |
+| | 训练状态 | **Epoch 38 / 89** | 触发早停。验证集 MR-full-mAP 最高达 8.97 | - |
+| **II. 测试集表现 (默认阈值 $\tau=0.4$)** | AUROC | **70.00%** | 与阈值无关的分类判别能力，接近论文 Baseline (72.09%) | - |
+| | Rej-F1 | **0.00%** | **严重异常**：所有负样本的预测得分均大于 0.4，无一触发拒答。 | 将 $\tau$ 提至 0.6 可升至 **72.98%** |
+| | G-mIoU@1 | **4.49%** | 受误报拖累，全局指标崩塌（远低于论文 35.84%）。 | 将 $\tau$ 提至 0.55 可升至 **39.31%** |
+| | G-mIoU@3 | **2.12%** | 同上，受拒答门控失效影响。 | - |
+| | mAP | **8.09%** | 纯正样本集的定位精度，略高于论文 Baseline (7.52%)。 | Fix Boundary 可达 **100%** |
+| | mR@5 | **14.14%** | 平均召回率（前 5 个预测中命中的真值比例）。 | - |
+| | mR+@5 | **0.97%** | **严重偏低**：增量多目标召回率。说明找不全同类动作。 | - |
+| **III. 细粒度错误分布 (Failure Modes)** | 1. 拒答误报 (Rejection FP) | **100% (492/492)** | 在 $\tau=0.4$ 时，所有的空集负样本都被模型强制分配了动作框。负样本得分均值高达 0.518。 | **首要修复方向**：修复后 G-mIoU@1 增益可达 **+11.87%**，突破 51% |
+| | 2. 拒答漏报 (Rejection FN) | **0% (0/544)** | 在 $\tau=0.4$ 时无漏报；但若阈值调至 0.55，会产生 238 个漏报（误杀43.8%的正样本）。 | 阈值校准 (Calibration) 平衡 FP/FN |
+| | 3. 预测过载 (Over-detection) | **100% (544/544)** | 所有的正样本查询，模型都输出了大量多余且无用的预测框。额外预测平均得分为 0.447。 | **次要修复方向**：修复后 G-mIoU@1 增益达 **+18.92%** |
+| | 4. 多目标漏检 (Multi-miss) | **85.6% 漏检** | 在 160 个多目标查询中，只有 36 个 (22.5%) 命中了后续片段，14.4% 仅命中第一个（发生坍缩）。 | 改进 Decoder 多样性机制，当前难以通过简单后处理修复。 |
+| | 5. 边界不精 (Boundary Near-miss) | **6.3% 近失误** | $0.3 \le IoU < 0.5$ 的不精确匹配。匹配框的平均 IoU 仅为 0.27 (部分记录甚至低至 0.09)。 | **定位修复方向**：时序边界回归微调，修复后 mAP 增益可达 **+30.74%** |
+
+
 Official repository for **Retrieving Any Relevant Moments: Benchmark and Models for Generalized Moment Retrieval**.
 
 **Generalized Moment Retrieval (GMR)** extends video moment retrieval to a unified setting where a query may correspond to **no moment**, **one moment**, or **multiple moments** in a video. A GMR system must retrieve the complete set of relevant temporal moments, or correctly return an empty set when the queried event is absent.
