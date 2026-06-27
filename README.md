@@ -25,6 +25,17 @@
 | | 5. 边界不精 (Boundary Near-miss) | **6.3% 近失误** | $0.3 \le IoU < 0.5$ 的不精确匹配。匹配框的平均 IoU 仅为 0.27 (部分记录甚至低至 0.09)。 | **定位修复方向**：时序边界回归微调，修复后 mAP 增益可达 **+30.74%** |
 
 
+
+
+
+
+   评估维度   │ 指标项   │ 纯血版 Baseline (无… │ 之前的错误版 Idea 1… │ 现在修复后的 Idea 1 (双轨制放行)
+  ────────────┼──────────┼──────────────────────┼──────────────────────┼──────────────────────────────────
+   打假拒答   │          │ 0.00%                │ 74.50%               │ 74.50%
+   端到端大考 │ G-mIoU@1 │ 4.49%                │ 51.76%               │ 50.83% (保住了巨大收益)
+   单目标定位 │ mAP      │ 8.09%                │ 3.24%                │ 7.11% (成功满血复活！)
+              │ mR@5     │ 14.14%               │ 4.38%                │ 10.27% (大幅回升)
+   多目标增量 │ mR+@5    │ 0.97%                │ 0.00%                │ 1.12% (超越 Baseline！)
 Official repository for **Retrieving Any Relevant Moments: Benchmark and Models for Generalized Moment Retrieval**.
 
 **Generalized Moment Retrieval (GMR)** extends video moment retrieval to a unified setting where a query may correspond to **no moment**, **one moment**, or **multiple moments** in a video. A GMR system must retrieve the complete set of relevant temporal moments, or correctly return an empty set when the queried event is absent.
