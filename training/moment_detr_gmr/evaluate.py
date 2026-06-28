@@ -82,6 +82,24 @@ def compute_mr_results(epoch_i, model, eval_loader, opt, criterion=None):
         # preds_slot_list = infer_with_slot_rejection(slot_fg_prob, pred_spans, tau_slot=0.5)
 
         for idx, (meta, spans, score) in enumerate(zip(query_meta, pred_spans, scores)):
+            if getattr(opt, "split", getattr(opt, "eval_split_name", "")) == "test" and not getattr(opt, "use_nms", False):
+                if not hasattr(opt, "_test_pred_dump"):
+                    opt._test_pred_dump = []
+                # We will use meta["relevant_windows"] directly
+                gt_spans = meta.get("relevant_windows", [])
+                opt._test_pred_dump.append({
+                    "gt_spans": gt_spans,
+                    "duration": meta.get("duration", 150),
+                    "pred_spans": spans.tolist(),
+                    "slot_fg_prob": score.tolist()
+                })
+
+            if getattr(opt, "use_nms", False):
+                from models.moment_detr_gmr.slot_existence_head import _temporal_nms
+                kept = _temporal_nms(spans, score, iou_thr=getattr(opt, "nms_thr", 0.7))
+                spans = spans[kept]
+                score = score[kept]
+            
             # Always output all N spans with their original scores
             spans_xx = span_cxw_to_xx(spans) * meta["duration"]
             cur_ranked_preds = torch.cat([spans_xx, score[:, None]], dim=1).tolist()
@@ -117,6 +135,10 @@ def compute_mr_results(epoch_i, model, eval_loader, opt, criterion=None):
         move_window_method="left",
         process_func_names=("clip_ts", "round_multiple"),
     )
+    if hasattr(opt, "_test_pred_dump"):
+        dump_path = os.path.join(getattr(opt, "results_dir", "."), "test_pred_dump.pt")
+        torch.save(opt._test_pred_dump, dump_path)
+        
     return post_processor(mr_res), loss_meters
 
 def eval_epoch(epoch_i, model, eval_dataset, opt, save_submission_filename, criterion=None):
@@ -235,6 +257,13 @@ def parse_args():
     parser.add_argument("--results_dir", type=str, default=None)
     parser.add_argument("--device", type=str, default=None)
     parser.add_argument("--hard_exist_gate", action="store_true", help="Zero all window scores when p_exist is below threshold.")
+    parser.add_argument("--use_nms", action="store_true")
+    parser.add_argument("--nms_thr", type=float, default=0.7)
+    parser.add_argument("--use_sa", type=lambda x: (str(x).lower() == 'true'), default=True)
+    parser.add_argument("--query_dropout", type=float, default=0.0)
+    parser.add_argument("--use_diversity", type=lambda x: (str(x).lower() == 'true'), default=False)
+    parser.add_argument("--div_coef", type=float, default=0.5)
+    parser.add_argument("--div_margin", type=float, default=0.5)
     return parser.parse_args()
 
 if __name__ == "__main__":
@@ -243,7 +272,7 @@ if __name__ == "__main__":
     option_manager.parse()
     opt = option_manager.option
 
-    for name in ["eval_path", "t_feat_dir", "results_dir", "device", "hard_exist_gate"]:
+    for name in ["model_path", "eval_path", "t_feat_dir", "results_dir", "device", "hard_exist_gate", "use_nms", "nms_thr", "use_sa", "query_dropout", "use_diversity", "div_coef", "div_margin"]:
         value = getattr(args, name)
         if value is not None:
             setattr(opt, name, value)

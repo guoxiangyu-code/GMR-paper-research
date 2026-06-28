@@ -1,0 +1,51 @@
+/home/guoxiangyu/Base_code/generalized-moment-retrieval/experiments/20260627_stage2_run1/plot_query_span.py:30: MatplotlibDeprecationWarning: The get_cmap function was deprecated in Matplotlib 3.7 and will be removed in 3.11. Use ``matplotlib.colormaps[name]`` or ``matplotlib.colormaps.get_cmap()`` or ``pyplot.get_cmap()`` instead.
+  cmap = get_cmap("autumn_r")
+/home/guoxiangyu/Base_code/generalized-moment-retrieval/experiments/20260627_stage2_run1/plot_query_span.py:101: UserWarning: Glyph 24402 (\N{CJK UNIFIED IDEOGRAPH-5F52}) missing from font(s) DejaVu Sans.
+  fig.tight_layout(rect=[0, 0, 1, 0.97])
+/home/guoxiangyu/Base_code/generalized-moment-retrieval/experiments/20260627_stage2_run1/plot_query_span.py:101: UserWarning: Glyph 19968 (\N{CJK UNIFIED IDEOGRAPH-4E00}) missing from font(s) DejaVu Sans.
+  fig.tight_layout(rect=[0, 0, 1, 0.97])
+/home/guoxiangyu/Base_code/generalized-moment-retrieval/experiments/20260627_stage2_run1/plot_query_span.py:101: UserWarning: Glyph 21270 (\N{CJK UNIFIED IDEOGRAPH-5316}) missing from font(s) DejaVu Sans.
+  fig.tight_layout(rect=[0, 0, 1, 0.97])
+/home/guoxiangyu/Base_code/generalized-moment-retrieval/experiments/20260627_stage2_run1/plot_query_span.py:101: UserWarning: Glyph 26102 (\N{CJK UNIFIED IDEOGRAPH-65F6}) missing from font(s) DejaVu Sans.
+  fig.tight_layout(rect=[0, 0, 1, 0.97])
+/home/guoxiangyu/Base_code/generalized-moment-retrieval/experiments/20260627_stage2_run1/plot_query_span.py:101: UserWarning: Glyph 38388 (\N{CJK UNIFIED IDEOGRAPH-95F4}) missing from font(s) DejaVu Sans.
+  fig.tight_layout(rect=[0, 0, 1, 0.97])
+/home/guoxiangyu/Base_code/generalized-moment-retrieval/experiments/20260627_stage2_run1/plot_query_span.py:101: UserWarning: Glyph 36724 (\N{CJK UNIFIED IDEOGRAPH-8F74}) missing from font(s) DejaVu Sans.
+  fig.tight_layout(rect=[0, 0, 1, 0.97])
+/home/guoxiangyu/Base_code/generalized-moment-retrieval/experiments/20260627_stage2_run1/plot_query_span.py:101: UserWarning: Glyph 33394 (\N{CJK UNIFIED IDEOGRAPH-8272}) missing from font(s) DejaVu Sans.
+  fig.tight_layout(rect=[0, 0, 1, 0.97])
+/home/guoxiangyu/Base_code/generalized-moment-retrieval/experiments/20260627_stage2_run1/plot_query_span.py:101: UserWarning: Glyph 32622 (\N{CJK UNIFIED IDEOGRAPH-7F6E}) missing from font(s) DejaVu Sans.
+  fig.tight_layout(rect=[0, 0, 1, 0.97])
+/home/guoxiangyu/Base_code/generalized-moment-retrieval/experiments/20260627_stage2_run1/plot_query_span.py:101: UserWarning: Glyph 20449 (\N{CJK UNIFIED IDEOGRAPH-4FE1}) missing from font(s) DejaVu Sans.
+  fig.tight_layout(rect=[0, 0, 1, 0.97])
+/home/guoxiangyu/Base_code/generalized-moment-retrieval/experiments/20260627_stage2_run1/plot_query_span.py:101: UserWarning: Glyph 34013 (\N{CJK UNIFIED IDEOGRAPH-84DD}) missing from font(s) DejaVu Sans.
+  fig.tight_layout(rect=[0, 0, 1, 0.97])
+/home/guoxiangyu/Base_code/generalized-moment-retrieval/experiments/20260627_stage2_run1/plot_query_span.py:101: UserWarning: Glyph 24102 (\N{CJK UNIFIED IDEOGRAPH-5E26}) missing from font(s) DejaVu Sans.
+  fig.tight_layout(rect=[0, 0, 1, 0.97])
+/home/guoxiangyu/Base_code/generalized-moment-retrieval/experiments/20260627_stage2_run1/plot_query_span.py:103: UserWarning: Glyph 24402 (\N{CJK UNIFIED IDEOGRAPH-5F52}) missing from font(s) DejaVu Sans.
+  fig.savefig(out, dpi=150)
+/home/guoxiangyu/Base_code/generalized-moment-retrieval/experiments/20260627_stage2_run1/plot_query_span.py:103: UserWarning: Glyph 19968 (\N{CJK UNIFIED IDEOGRAPH-4E00}) missing from font(s) DejaVu Sans.
+  fig.savefig(out, dpi=150)
+/home/guoxiangyu/Base_code/generalized-moment-retrieval/experiments/20260627_stage2_run1/plot_query_span.py:103: UserWarning: Glyph 21270 (\N{CJK UNIFIED IDEOGRAPH-5316}) missing from font(s) DejaVu Sans.
+  fig.savefig(out, dpi=150)
+/home/guoxiangyu/Base_code/generalized-moment-retrieval/experiments/20260627_stage2_run1/plot_query_span.py:103: UserWarning: Glyph 26102 (\N{CJK UNIFIED IDEOGRAPH-65F6}) missing from font(s) DejaVu Sans.
+  fig.savefig(out, dpi=150)
+/home/guoxiangyu/Base_code/generalized-moment-retrieval/experiments/20260627_stage2_run1/plot_query_span.py:103: UserWarning: Glyph 38388 (\N{CJK UNIFIED IDEOGRAPH-95F4}) missing from font(s) DejaVu Sans.
+  fig.savefig(out, dpi=150)
+/home/guoxiangyu/Base_code/generalized-moment-retrieval/experiments/20260627_stage2_run1/plot_query_span.py:103: UserWarning: Glyph 36724 (\N{CJK UNIFIED IDEOGRAPH-8F74}) missing from font(s) DejaVu Sans.
+  fig.savefig(out, dpi=150)
+/home/guoxiangyu/Base_code/generalized-moment-retrieval/experiments/20260627_stage2_run1/plot_query_span.py:103: UserWarning: Glyph 33394 (\N{CJK UNIFIED IDEOGRAPH-8272}) missing from font(s) DejaVu Sans.
+  fig.savefig(out, dpi=150)
+/home/guoxiangyu/Base_code/generalized-moment-retrieval/experiments/20260627_stage2_run1/plot_query_span.py:103: UserWarning: Glyph 32622 (\N{CJK UNIFIED IDEOGRAPH-7F6E}) missing from font(s) DejaVu Sans.
+  fig.savefig(out, dpi=150)
+/home/guoxiangyu/Base_code/generalized-moment-retrieval/experiments/20260627_stage2_run1/plot_query_span.py:103: UserWarning: Glyph 20449 (\N{CJK UNIFIED IDEOGRAPH-4FE1}) missing from font(s) DejaVu Sans.
+  fig.savefig(out, dpi=150)
+/home/guoxiangyu/Base_code/generalized-moment-retrieval/experiments/20260627_stage2_run1/plot_query_span.py:103: UserWarning: Glyph 34013 (\N{CJK UNIFIED IDEOGRAPH-84DD}) missing from font(s) DejaVu Sans.
+  fig.savefig(out, dpi=150)
+/home/guoxiangyu/Base_code/generalized-moment-retrieval/experiments/20260627_stage2_run1/plot_query_span.py:103: UserWarning: Glyph 24102 (\N{CJK UNIFIED IDEOGRAPH-5E26}) missing from font(s) DejaVu Sans.
+  fig.savefig(out, dpi=150)
+GT>=2 样本数: 160
+[关键统计] GT>=2 样本平均 GT 覆盖率 = 0.499 (=1 表示每个 GT 都有 query 覆盖;<<1 表示 query 塌缩漏掉次要 moment)
+  覆盖率=1.0 的样本占比: 0.225
+  覆盖率<=0.5 的样本占比: 0.694
+[已保存] experiments/20260627_stage3_coef0.1/span_viz/query_span_grid.png

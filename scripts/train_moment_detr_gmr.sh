@@ -15,4 +15,5 @@ python training/moment_detr_gmr/train.py \
   --eval_path "${EVAL_PATH}" \
   --t_feat_dir "${TEXT_FEAT_DIR}" \
   --v_feat_dirs "${CLIP_FEAT_DIR}" "${SLOWFAST_FEAT_DIR}" \
-  --results_dir "${RESULTS_DIR}"
+  --results_dir "${RESULTS_DIR}" \
+  "$@"

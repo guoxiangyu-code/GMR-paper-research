@@ -201,6 +201,14 @@ def parse_args():
     parser.add_argument("--device", type=str, default=None)
     parser.add_argument("--overwrite", action="store_true", help="Remove the output directory before training.")
     parser.add_argument("--mr_only", action="store_true", default=True, help="Disable saliency labels.")
+    parser.add_argument("--use_sa", type=lambda x: (str(x).lower() == 'true'), default=True, help="Use decoder self-attention")
+    parser.add_argument("--query_dropout", type=float, default=0.0, help="Query dropout rate")
+    parser.add_argument("--use_nms", type=lambda x: (str(x).lower() == 'true'), default=False, help="Use temporal NMS during evaluation")
+    parser.add_argument("--nms_thr", type=float, default=0.7, help="NMS threshold")
+    parser.add_argument("--seed", type=int, default=None, help="Random seed")
+    parser.add_argument("--use_diversity", type=lambda x: (str(x).lower() == 'true'), default=False, help="Use temporal diversity loss")
+    parser.add_argument("--div_coef", type=float, default=0.5, help="Coefficient for diversity loss")
+    parser.add_argument("--div_margin", type=float, default=0.5, help="Margin for diversity loss (tIoU threshold)")
     return parser.parse_args()
 
 if __name__ == "__main__":
@@ -214,7 +222,7 @@ if __name__ == "__main__":
         opt.ckpt_filepath = os.path.join(opt.results_dir, opt.ckpt_filename)
         opt.train_log_filepath = os.path.join(opt.results_dir, opt.train_log_filename)
         opt.eval_log_filepath = os.path.join(opt.results_dir, opt.eval_log_filename)
-    for name in ["lr", "n_epoch", "bsz", "eval_bsz", "max_es_cnt", "train_path", "eval_path", "t_feat_dir", "results_dir", "device"]:
+    for name in ["lr", "n_epoch", "bsz", "eval_bsz", "max_es_cnt", "train_path", "eval_path", "t_feat_dir", "results_dir", "device", "use_sa", "query_dropout", "use_nms", "nms_thr", "seed", "use_diversity", "div_coef", "div_margin"]:
         value = getattr(args, name)
         if value is not None:
             setattr(opt, name, value)

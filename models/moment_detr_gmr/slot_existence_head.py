@@ -69,18 +69,52 @@ def existence_loss(slot_fg_logit, slot_fg_prob, matched_slot_idx,
                                          "L_any": l_any.item()}
 
 
+def _cxw_to_stae(x):
+    """[*,2] (cx,w) → (st,ed);已是 (st,ed) 时传 is_cxw=False 跳过。"""
+    st = x[..., 0] - x[..., 1] / 2.0
+    ed = x[..., 0] + x[..., 1] / 2.0
+    return torch.stack([st, ed], dim=-1)
+
+def temporal_iou(box, others, is_cxw=True):
+    """box: [2];others: [M,2]。返回 [M] 的 1-vs-M 时序 IoU。"""
+    if is_cxw:
+        box = _cxw_to_stae(box.unsqueeze(0)).squeeze(0)
+        others = _cxw_to_stae(others)
+    s1, e1 = box[0], box[1]
+    s2, e2 = others[:, 0], others[:, 1]
+    inter = (torch.min(e1, e2) - torch.max(s1, s2)).clamp(min=0)
+    union = (e1 - s1).clamp(min=0) + (e2 - s2).clamp(min=0) - inter
+    return inter / union.clamp(min=1e-6)
+
+def _temporal_nms(spans, scores, iou_thr=0.7):
+    order = scores.argsort(descending=True)
+    keep = []
+    while order.numel() > 0:
+        i = order[0].item()
+        keep.append(i)
+        if order.numel() == 1:
+            break
+        rest = order[1:]
+        iou = temporal_iou(spans[i], spans[rest], is_cxw=True)
+        order = rest[iou <= iou_thr]
+    return torch.tensor(keep, dtype=torch.long, device=spans.device)
+
 @torch.no_grad()
-def infer_with_slot_rejection(slot_fg_prob, spans, tau_slot=0.5, min_fg=1):
-    """spans: [B, N, 2];返回每个样本的预测窗口列表(空集即 [])。"""
-    fg_mask = slot_fg_prob > tau_slot                  # [B, N]
+def infer_with_slot_rejection(slot_fg_prob, spans, tau_slot=0.5, min_fg=1,
+                              use_nms=False, nms_thr=0.7):
+    fg_mask = slot_fg_prob > tau_slot
     n_fg = fg_mask.sum(1)
     preds = []
     for b in range(spans.size(0)):
         if n_fg[b] < min_fg:
-            preds.append([])                           # 所有 slot 判背景 → 空集
+            preds.append([])                       # Noisy-OR 拒答,空集
         else:
-            sel = spans[b][fg_mask[b]]
-            sc = slot_fg_prob[b][fg_mask[b]]
+            sel = spans[b][fg_mask[b]]             # [M,2] (cx,w)
+            sc = slot_fg_prob[b][fg_mask[b]]       # [M]
             order = torch.argsort(sc, descending=True)
-            preds.append(torch.cat([sel[order], sc[order, None]], dim=1).tolist())
+            sel, sc = sel[order], sc[order]
+            if use_nms and sel.size(0) > 1:        # 删SA后去重叠框
+                kept = _temporal_nms(sel, sc, iou_thr=nms_thr)
+                sel, sc = sel[kept], sc[kept]
+            preds.append(torch.cat([sel, sc[:, None]], dim=1).tolist())
     return preds

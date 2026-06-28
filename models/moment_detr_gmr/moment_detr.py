@@ -11,6 +11,7 @@ from models.moment_detr_gmr.matcher import build_matcher
 from models.moment_detr_gmr.misc import accuracy
 from models.moment_detr_gmr.moment_transformer import build_transformer
 from models.moment_detr_gmr.gmr_adapter import GMRAdapter, compute_existence_loss
+from models.moment_detr_gmr.diversity_loss import temporal_diversity_loss
 
 from models.moment_detr_gmr.slot_existence_head import SlotExistenceHead, existence_loss, aggregate_existence, infer_with_slot_rejection
 
@@ -20,7 +21,7 @@ class MomentDETR(nn.Module):
 
     def __init__(self, transformer, position_embed, txt_position_embed, txt_dim, vid_dim,
                  num_queries, input_dropout, aux_loss=False, max_v_l=75, span_loss_type="l1",
-                 use_txt_pos=False, n_input_proj=2, aud_dim=0, use_exist_head=False, exist_pool="max"):
+                 use_txt_pos=False, n_input_proj=2, aud_dim=0, use_exist_head=False, exist_pool="max", query_dropout=0.0):
         """ Initializes the model.
         Parameters:
             transformer: torch module of the transformer architecture. See transformer.py
@@ -38,6 +39,7 @@ class MomentDETR(nn.Module):
         """
         super().__init__()
         self.num_queries = num_queries
+        self.query_dropout = float(query_dropout)
         self.transformer = transformer
         self.position_embed = position_embed
         self.txt_position_embed = txt_position_embed
@@ -102,7 +104,15 @@ class MomentDETR(nn.Module):
         pos_vid = self.position_embed(src_vid, src_vid_mask)  # (bsz, L_vid, d)
         pos_txt = self.txt_position_embed(src_txt) if self.use_txt_pos else torch.zeros_like(src_txt)  # (bsz, L_txt, d)
         pos = torch.cat([pos_vid, pos_txt], dim=1)
-        hs, memory = self.transformer(src, ~mask, self.query_embed.weight, pos)
+        
+        q_weight = self.query_embed.weight
+        if self.training and self.query_dropout > 0:
+            keep = 1.0 - self.query_dropout
+            mask_q = torch.bernoulli(
+                torch.full((q_weight.size(0), 1), keep, device=q_weight.device))
+            q_weight = q_weight * mask_q
+            
+        hs, memory = self.transformer(src, ~mask, q_weight, pos)
         outputs_class = self.class_embed(hs)  # (#layers, batch_size, #queries, #classes)
         outputs_coord = self.span_embed(hs)  # (#layers, bsz, #queries, 2 or max_v_l * 2)
         if self.span_loss_type == "l1":
@@ -289,6 +299,14 @@ class SetCriterion(nn.Module):
         losses["loss_slot"] = l_slot
         if "loss_slot" not in self.weight_dict:
             self.weight_dict["loss_slot"] = 1.0
+        if getattr(self, "use_diversity", False):
+            l_div = temporal_diversity_loss(
+                outputs["pred_spans"], matched_slot_idx,
+                iou_margin=getattr(self, "div_margin", 0.5),
+                protect_matched=True)
+            losses["loss_diversity"] = l_div
+            if "loss_diversity" not in self.weight_dict:
+                self.weight_dict["loss_diversity"] = getattr(self, "div_coef", 0.0)
 
         if 'aux_outputs' in outputs:
             for i, aux_outputs in enumerate(outputs['aux_outputs']):
@@ -361,6 +379,7 @@ def build_model(args):
         n_input_proj=args.n_input_proj,
         use_exist_head=bool(getattr(args, "use_exist_head", False)),
         exist_pool=str(getattr(args, "exist_pool", "max")),
+        query_dropout=float(getattr(args, "query_dropout", 0.0)),
     )
 
     matcher = build_matcher(args)
@@ -387,6 +406,11 @@ def build_model(args):
         eos_coef=args.eos_coef, span_loss_type=args.span_loss_type,
         max_v_l=args.max_v_l, saliency_margin=args.saliency_margin
     )
-
     criterion.to(device)
+    
+    # Idea 1 / Diversity loss config
+    criterion.use_diversity = bool(getattr(args, "use_diversity", False))
+    criterion.div_coef = float(getattr(args, "div_coef", 0.5))
+    criterion.div_margin = float(getattr(args, "div_margin", 0.5))
+    
     return model, criterion
