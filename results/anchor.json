@@ -1,0 +1,5 @@
+{
+  "baseline_mRplus@5": 1.17,
+  "baseline_G_mIoU@1": 0.982,
+  "oracle_ceiling": 14.06
+}

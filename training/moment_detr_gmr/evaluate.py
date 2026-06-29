@@ -64,8 +64,43 @@ def compute_mr_results(epoch_i, model, eval_loader, opt, criterion=None):
         outputs = model(**model_inputs)
 
         pred_spans = outputs["pred_spans"].cpu()
-        prob = F.softmax(outputs["pred_logits"], -1)
-        scores = prob[..., 0].cpu()
+
+        
+        pred_spans = outputs["pred_spans"].cpu()
+        
+        import os
+        rescore_type = os.environ.get("RESCORE_TYPE", "none")
+        if rescore_type == "sharpA":
+            saliency_scores = outputs["saliency_scores"].cpu()
+            bs, num_queries, _ = pred_spans.shape
+            L_vid = saliency_scores.shape[1]
+            scores = torch.zeros(bs, num_queries)
+            for b in range(bs):
+                for q in range(num_queries):
+                    cx, w = pred_spans[b, q].tolist()
+                    st = max(0, int((cx - w / 2) * L_vid))
+                    ed = min(L_vid, int((cx + w / 2) * L_vid))
+                    if ed > st:
+                        scores[b, q] = saliency_scores[b, st:ed].max() - saliency_scores[b].median()
+                    else:
+                        scores[b, q] = -100.0
+        elif rescore_type == "sharpB":
+            saliency_scores = outputs["saliency_scores"].cpu()
+            bs, num_queries, _ = pred_spans.shape
+            L_vid = saliency_scores.shape[1]
+            scores = torch.zeros(bs, num_queries)
+            for b in range(bs):
+                for q in range(num_queries):
+                    cx, w = pred_spans[b, q].tolist()
+                    st = max(0, int((cx - w / 2) * L_vid))
+                    ed = min(L_vid, int((cx + w / 2) * L_vid))
+                    if ed > st:
+                        scores[b, q] = saliency_scores[b, st:ed].max() / (saliency_scores[b, st:ed].median() + 1e-6)
+                    else:
+                        scores[b, q] = 0.0
+        else:
+            prob = F.softmax(outputs["pred_logits"], -1)
+            scores = prob[..., 0].cpu()
 
         pred_exist_scores = None
         if "pred_exist_logits" in outputs:

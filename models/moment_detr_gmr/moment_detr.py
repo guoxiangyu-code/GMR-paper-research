@@ -122,6 +122,9 @@ class MomentDETR(nn.Module):
         vid_mem = memory[:, :src_vid.shape[1]]  # (bsz, L_vid, d)
 
         out["saliency_scores"] = self.saliency_proj(vid_mem).squeeze(-1)  # (bsz, L_vid)
+        out["hs"] = hs[-1]
+        out["txt_mem"] = txt_mem
+        out["last_xattn"] = self.transformer.decoder.layers[-1].last_xattn
 
         if self.aux_loss:
             out['aux_outputs'] = [
