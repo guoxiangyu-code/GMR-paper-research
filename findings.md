@@ -31,3 +31,14 @@ We need to proceed with authentic GT-free rescoring:
   - The MLP was trained with Margin Ranking Loss across all query windows. The loss stabilized around 0.81 (margin=0.5), indicating a positive-negative score difference of only ~0.29.
   - The MLP failed to learn a strong distinguishing signal, meaning the 5 perception-only features provide insufficient information for accurate ranking.
 - **Conclusion**: The hypothesis is confirmed. Perception features alone cannot achieve the 6%~10% target. The "insurance" (position priors) must be unlocked. This mandates moving to the final form of Idea1: Dual-track decoupling inside the regression head itself.
+
+## STAGE 2 Correction: True Position-Free Evaluation
+- **Fixes applied**:
+  - Investigated the Oracle ceiling and found that `order_diversity` NMS yields exactly 3.12% (GT=2 subset) - the exact same as baseline. Thus, mere duplication removal is insufficient to bring the secondary targets into top-5; content discrimination is genuinely required.
+  - Removed `hs` entirely from the MLP input. `hs` carried implicit positional anchor IDs which were drowning out the perception signals.
+  - Fixed `xmodal_align` to use standard cross-attention weights over the text sequence instead of unaligned spatial cosine similarity.
+  - Applied temporal NMS during evaluation.
+- **Results (Pure 4-dim Perception MLP)**:
+  - The MLP loss stalled at ~0.90, failing to discriminate between positives and negatives.
+  - Across all fusion weights (`a`, `b`), `mR+@5` stayed dead-locked at 0.70% and `G-mIoU@1` at 0.97%. The MLP effectively outputs a uniform score, contributing zero variance to the ranking.
+- **Final Verdict**: The pure perception features contain virtually no discriminative power to score window boundaries. The hypothesis is flawlessly confirmed: "置信度评分被位置先验绑架". Without position priors, the model is blind to correctness. We **MUST** unlock the position features and move to Idea 1's final form: **Dual-track Decoupling in the Regression Head**.

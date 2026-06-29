@@ -107,12 +107,13 @@ def dump_split_features(split_name, opt, model, save_path):
                 xattn_q = torch.clamp(xattn_q, 1e-9, 1.0)
                 xattn_entropy = -(xattn_q * torch.log(xattn_q)).sum()
                 
-                # xmodal_align: token level max pool over txt
-                # txt_mem is (L_txt, d), hs_q is (d)
-                hs_q = hs[b, q]
-                sim = F.cosine_similarity(hs_q.unsqueeze(0), txt_mem[b], dim=-1) # (L_txt)
-                sim = sim.masked_fill(~txt_mask, -1.0)
-                xmodal_align = sim.max()
+                # xmodal_align: attention weight max over text tokens
+                # xattn_q is (L_vid + L_txt)
+                txt_attn = xattn_q[L_vid:] # text part
+                txt_attn = txt_attn.masked_fill(~txt_mask, 0.0)
+                xmodal_align = txt_attn.max()
+                
+                # We NO LONGER dump hs_q because it contains position bias.
                 
                 # maxIoU
                 pred_xx = torch.tensor([[s, e]])
@@ -125,7 +126,6 @@ def dump_split_features(split_name, opt, model, save_path):
                 label = 1 if max_iou >= 0.5 else 0
                 
                 f = {
-                    "hs": hs_q,
                     "xattn_entropy": xattn_entropy.item(),
                     "sal_sharp": sal_sharp.item(),
                     "width": w,

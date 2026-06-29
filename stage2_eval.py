@@ -6,6 +6,23 @@ from stage2_train import RerankHead
 from collections import defaultdict
 import numpy as np
 
+def tiou(w1,w2):
+    s1,e1=w1; s2,e2=w2
+    inter=max(0,min(e1,e2)-max(s1,s2)); uni=(e1-s1)+(e2-s2)-inter
+    return inter/uni if uni>0 else 0
+
+def temporal_nms(preds):
+    chosen=[]
+    pool=list(preds)
+    while pool and len(chosen)<len(preds):
+        best=None; best_v=-1
+        for p in pool:
+            pen=max([tiou(p[0:2],c[0:2]) for c in chosen], default=0)
+            v=p[2]*(1-pen)
+            if v>best_v: best_v=v; best=p
+        chosen.append(best); pool.remove(best)
+    return chosen
+
 def evaluate_fusion():
     os.makedirs("results/stage2_main", exist_ok=True)
     
@@ -55,13 +72,12 @@ def evaluate_fusion():
         
         with torch.no_grad():
             for f in cache:
-                hs = f["hs"].unsqueeze(0).cuda()
                 xattn_entropy = torch.tensor([f["xattn_entropy"]]).cuda()
                 sal_sharp = torch.tensor([f["sal_sharp"]]).cuda()
                 width = torch.tensor([f["width"]]).cuda()
                 xmodal_align = torch.tensor([f["xmodal_align"]]).cuda()
                 
-                mlp_score = head(hs, xattn_entropy, sal_sharp, width, xmodal_align).item()
+                mlp_score = head(xattn_entropy, sal_sharp, width, xmodal_align).item()
                 f["mlp_score"] = mlp_score
                 
         for a in alphas:
@@ -81,6 +97,7 @@ def evaluate_fusion():
                         ranked_preds.append([float(q["s"]) * q["duration"], float(q["e"]) * q["duration"], float(score)])
                         
                     ranked_preds = sorted(ranked_preds, key=lambda x: x[2], reverse=True)
+                    ranked_preds = temporal_nms(ranked_preds)
                     cur_query_pred["pred_relevant_windows"] = ranked_preds
                     submission.append(cur_query_pred)
                     
