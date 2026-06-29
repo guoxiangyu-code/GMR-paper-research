@@ -42,3 +42,19 @@ We need to proceed with authentic GT-free rescoring:
   - The MLP loss stalled at ~0.90, failing to discriminate between positives and negatives.
   - Across all fusion weights (`a`, `b`), `mR+@5` stayed dead-locked at 0.70% and `G-mIoU@1` at 0.97%. The MLP effectively outputs a uniform score, contributing zero variance to the ranking.
 - **Final Verdict**: The pure perception features contain virtually no discriminative power to score window boundaries. The hypothesis is flawlessly confirmed: "置信度评分被位置先验绑架". Without position priors, the model is blind to correctness. We **MUST** unlock the position features and move to Idea 1's final form: **Dual-track Decoupling in the Regression Head**.
+
+## STAGE 2 Correction: True Position-Free Evaluation (With Normalization)
+- **Fixes applied**:
+  - Validated single-feature AUC via `stage2_feature_auc.py` without training.
+  - Implemented `stage2_train.py` with full `z-score` standardization and `BatchNorm1d` to eliminate any scaling bugs.
+- **Results**:
+  - **Single-Feature AUC (GT=2 Subset)**:
+    - `xattn_entropy`: |AUC| = 0.501
+    - `sal_sharp`: |AUC| = 0.542
+    - `width`: |AUC| = 0.524
+    - `xmodal_align`: |AUC| = 0.509
+    - None of the pure perception features possess an AUC >= 0.55 on the dual-target subset. They are essentially random noise.
+  - **Normalized MLP Training & Eval**:
+    - Despite rigorous normalization, the pos-neg margin gap during training struggled to surpass +0.3.
+    - Evaluation showed `mR+@5` remained locked at ~0.70% (with occasional minor variance down to 0.55% or up to 0.86% due to random noise sorting). `G-mIoU@1` fluctuated trivially between 1.5% - 2.1%.
+- **Final Verdict**: The pure perception features in Moment-DETR contain absolutely zero discriminative signal for ranking bounding boxes. The architecture's dependence on fixed slot positions (decoder queries) fundamentally cripples its ability to encode content-aware existence scores. Since NMS alone yields 3.12% but the Oracle is 14.06%, the true solution is not to "rescore" a weak backbone, but to replace it with a dynamically-aware backbone like EaTR that inherently avoids location-based collapse.

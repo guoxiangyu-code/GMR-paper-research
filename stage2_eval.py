@@ -2,7 +2,7 @@ import torch
 import json
 import os
 import subprocess
-from stage2_train import RerankHead
+from stage2_train import RerankHead, FEATS, stack_feats
 from collections import defaultdict
 import numpy as np
 
@@ -66,19 +66,14 @@ def evaluate_fusion():
     
     for seed in seeds:
         head_path = f"results/rerank_head_seed{seed}.pt"
-        head = RerankHead().cuda()
+        head = RerankHead().cuda()            # 构造时 buffer 是占位, load 后被覆盖
         head.load_state_dict(torch.load(head_path))
         head.eval()
-        
         with torch.no_grad():
-            for f in cache:
-                xattn_entropy = torch.tensor([f["xattn_entropy"]]).cuda()
-                sal_sharp = torch.tensor([f["sal_sharp"]]).cuda()
-                width = torch.tensor([f["width"]]).cuda()
-                xmodal_align = torch.tensor([f["xmodal_align"]]).cuda()
-                
-                mlp_score = head(xattn_entropy, sal_sharp, width, xmodal_align).item()
-                f["mlp_score"] = mlp_score
+            feat_mat = stack_feats(cache).cuda()          # (N,4), 顺序与训练一致
+            mlp_scores = head.forward_feats(feat_mat).cpu().numpy()
+        for f, sc in zip(cache, mlp_scores):
+            f["mlp_score"] = float(sc)
                 
         for a in alphas:
             for b in betas:

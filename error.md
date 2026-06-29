@@ -1,60 +1,314 @@
-在做错误分析前,我先把你 `0629` 分支里几个关键脚本的真实实现拉下来看——只有对着代码,我才能把"MLP 为什么只到 0.29 分差"定位到具体的行,而不是又给你一堆猜测。
 
-我把 `0629` 分支的 `stage2_dump.py / stage2_train.py / stage2_eval.py / rescore_sim.py` 四个文件逐行过了一遍。结论先放这儿:**你的 STAGE 2 不是"perception 特征不够"导致的失败,而是至少四个实现层面的硬伤,其中两个是致命的——一个直接违反了你自己定的 [C2] 命门,另一个让你漏报了整个项目最该看的那个数。** 在修掉它们之前,"必须解锁位置先验"这个结论是无效的。
+你切到了 `idea1_dualtrack` 分支,我看到它比 `0629` 多了一个 `error.md`,而且 `stage2_dump/train/eval.py` 都在 `5e1972f` 这个 commit 里更新过。我先把最新的 `error.md`、`findings.md` 和三个改过的脚本拉下来,对比你这次到底改了什么、结果是否可信。
 
-下面按"致命 → 严重 → 干扰"排序。
+你这次把我上一轮指出的四个硬伤都改了——我对着 `5e1972f` 的代码逐行确认过:`hs` 确实从 dump 和 MLP 里整个删掉了、`xmodal_align` 换成了 `last_xattn` 文本段的注意力权重、`stage2_eval.py` 加了 `temporal_nms`、`order_diversity` 也补跑了。改得对。但你由此得出的最终结论"perception 特征零判别力,必须解锁位置先验、去改回归头"——**这个结论仍然站不住,而且这次是被一个还没修的 bug 和一个没做的关键实验给坑了。** 下面分三层说。
 
-### **致命伤一:`hs` 本身就是位置模板的载体——你以为做了 position-free,其实把位置先验从前门赶出去、又从 `hs` 后门放进来了**
+### **先肯定一件你这次推对了的事,顺便纠正我自己上一轮的错判**
 
-`stage2_train.py` 里 `RerankHead` 的输入是 68 维,其中 **64 维是 `proj(hs)`**,只有 4 维是那几个内容特征。问题在于:Moment-DETR 的 `hs` 是 decoder query 经过 cross-attention 后的输出,而 **Moment-DETR 的 10 个 decoder query 是"学出来的位置锚点(slot)"**——这正是你诊断里 `[12-22][46-58][74-90]...` 那五个固定位置模板的来源。每个 slot 的 `hs` 主要编码"我是第几号模板、负责视频哪个时间段",内容信息只是叠加在上面的弱分量。
+`order_diversity` 跑出来 **3.12%,和 baseline 一模一样**——这个结果直接**推翻了我上轮"top-5 被近重复模板框占满"的假设**,我那条得收回。它说明你诊断的那五个模板位置 `[12-22][46-58][74-90]...` 彼此**不重叠**,所以 NMS 去重根本没东西可去,top-5 本来就是 5 个互不重叠的位置。这意味着第二目标要进 top-5,**唯一的路就是把它的分数抬到能顶掉某个模板位置**——这确实是一个内容判别问题,不是去重问题。你这一步的逻辑是对的,`order_diversity=baseline` 是个干净有效的负结果,该写进论文。
 
-这意味着两件事同时成立,而且都对你不利:
+但从这里到"perception 零信号"还差着两道坎,你一步跨过去了。
 
-其一,**你违反了 [C2]**。你在伪代码里把 `center` 拉黑,但 `hs` 携带的 slot 身份就是绝对位置的隐式编码,比 `center` 还直接。所以这个 MLP 名义上 position-free,实质上 64/68 的输入都是位置信息。
+### **致命问题:4 维特征是"裸喂"进 MLP 的,没有任何归一化——loss 卡在 0.90 是尺度崩溃,不是特征没信号**
 
-其二,**这恰好解释了 0.29 的分差**。MLP 拿到的主信号是"这是哪个模板槽",而模板槽与"是否命中第二目标"几乎不相关(第二目标按你诊断就是落在模板**之外**的),所以 64 维 hs 对排序是高方差噪声,把那 4 维真正有用的内容特征彻底稀释。loss 卡在 `softplus(0.5-0.29)≈0.80` 不是因为内容特征没信息,而是因为它们被 64 维位置噪声淹没了。
+看 `stage2_train.py` 现在的 `RerankHead`:`torch.stack([xattn_entropy, sal_sharp, width, xmodal_align])` 直接进 `Linear(4,32)`,**没有任何标准化、没有 BatchNorm、没有 LayerNorm**。而这四个特征的量纲差着两三个数量级:
 
-**修法**:要么把 `hs` 整个拿掉、只用 4 个内容特征训一版(这才是真正的 position-free 上界测试);要么用一个对照实验明确量化 `hs` 带进来多少位置信息。在没做"去掉 hs"这版之前,你不能说"perception 特征不够"——你压根没干净地测过 perception 特征。
+- `xattn_entropy` 是对 `L_vid+L_txt`(几百维)求的熵,数值大概在 **3~6** 量级;
+- `xmodal_align` 是注意力权重的 max,**0~1** 之间,而且注意力 softmax 后单个 token 的权重通常 **< 0.05**;
+- `sal_sharp` 是 saliency 差值,可能是 **0.0x** 的小数;
+- `width` 是 **0~1**。
 
-### **致命伤二:你漏报了 `rescore_sim.py` 里最关键的那个数——`order_diversity`**
+把这种尺度的向量裸喂给一个 `lr=1e-3` 的小 MLP,`xattn_entropy` 那一维的数值会**单独主导**整个线性层,另外三维的梯度贡献被压到忽略不计;而 entropy 本身和"是否命中 GT"几乎无关,于是网络很快收敛到一个近似常数输出。**loss 稳在 0.90 ≈ `softplus(0.5−0.07)`,正负分差只有 ~0.07,这正是"输出退化成常数"的签名,不是"特征里没信息"的签名。** 你 findings 里写的 "MLP effectively outputs a uniform score, contributing zero variance" 描述的现象完全正确,但归因错了——uniform output 在这种未归一化的小 MLP 上,**首要嫌疑永远是输入尺度,不是特征质量**。
 
-`rescore_sim.py` 算了**三个**数:`order_baseline`、`order_diversity`、`order_oracle`。但你 findings 里只报了 baseline(3.12%)和 Oracle(14.06%),**把 `order_diversity` 整个跳过了**。这是个严重的汇报缺口,因为 `order_diversity` 才是真正回答你核心问题的那个量。
+这跟你上一版"loss 0.81、被 64 维 hs 噪声淹没"是**两个完全不同的失败机制**,你却得出了同一个结论,这本身就该警觉。
 
-看它的实现:它是一个**纯 GT-free 的 NMS 式多样性重排**——贪心选最高分,然后对"与已选窗口时序重叠"的候选降权,逼那些断崖下、位置不同的 query 上位。它**完全不用 GT**。这正是"在不解锁位置、不训练任何东西的前提下,光靠去重就能从 3.12% 撬到多少"的答案。
+### **你跳过了那个唯一能定生死的实验:单特征判别力(AUC)**
 
-**这个数你必须立刻补出来**,因为它直接决定路线:
+要判定"perception 特征到底有没有信号",根本不该先训 MLP。应该先做一个**不需要训练、十行脚本**的检验:对 train_cache 里每一个特征,单独算它对 `label`(命中 GT vs 没命中)的 **AUC**,并画出 label=1 / label=0 两类的条件分布。这才是 G1 闸门真正该回答的东西,你从头到尾没报过这个数。
 
-- 如果 `order_diversity` 能到 6~8%,那你根本不需要训 MLP、更不需要改回归头——**坍缩的一大半是"top-5 被近重复的模板窗口占满"造成的,一个推理端 NMS 就解决大半**。你之前的 MLP 之所以没用,可能是因为它即使重排,top-5 仍然是同一模板的近重复窗口(`stage2_eval.py` 里**完全没有去重**,直接 sort by score 取 top-5)。
-- 如果 `order_diversity` 也趴在 3% 附近,才说明去重不够、需要内容判别。
+- 如果四个特征的单维 AUC 全都 ≈ 0.5 → 那才**真的**是 perception 无信号,你的结论才成立;
+- 如果有任何一维 AUC ≥ 0.6,而 MLP 却失败 → **100% 是上面的归一化/优化 bug**,跟特征无关,你必须先修 bug 再下结论。
 
-我几乎可以断定这个数会显著高于 3.12%,因为你的病理诊断(固定位置模板霸占高分)本身就是 NMS 的完美适用场景。**这是今天就能跑、零训练成本的一行命令。**
+我的判断:`xmodal_align`(query 对文本的注意力峰值)和 `sal_sharp` 至少有一个会显著偏离 0.5,因为命中真实事件的窗口,其 query 通常对文本有更尖锐的注意力。所以你"零判别力"的结论大概率是错的。**这个 AUC 检验今天必须补,它比再训十次 MLP 都值钱。**
 
-### **严重问题三:`stage2_eval.py` 的重排没有任何去重,top-5 结构性地无法覆盖两个目标**
+### **还有一个你一直没确认的前提:`sal_sharp` 可能本就是纯噪声**
 
-接上一条。`stage2_eval.py` 里构造 submission 的逻辑是:把一个 query 的所有窗口按融合分降序 `sorted(...)` 直接取,塞进 `pred_relevant_windows`。**没有 NMS、没有时序去重。** 而你诊断过 top-5 高分窗口在不同样本间几乎固定在那五个模板位置——它们彼此高度重叠。
+`sal_sharp` 依赖 `outputs["saliency_scores"]` 是被训练过的。但 **Soccer-GMR 的标注里到底有没有逐帧 saliency 监督?** Moment-DETR 的 saliency 头是靠 QVHighlights 的 saliency 标签训出来的;你这个 GMR Adapter 版本如果没有这个标签,saliency 头就是随机初始化或没收敛的,那 `sal_sharp` 这一维从一开始就是噪声。**你在用一个可能根本没训练的输出当特征,却用它的失败去否定整个 perception 假设。** 这一条必须去 `models/moment_detr_gmr` 和数据 label 里确认。
 
-后果是:`mR+@5`(要求两个 GT 都进 top-5)在结构上几乎不可能达成,因为 top-5 里塞的是同一位置的 5 个近重复框。**这跟 MLP 学没学会无关**——哪怕 MLP 给第二目标的窗口提了分,只要第一目标的模板窗口有 3~4 个近重复都排在前面,第二目标照样挤不进 top-5。这就是为什么 a=0.3/b=0.7 融合后 mR+@5 纹丝不动停在 0.70%:瓶颈不在分数,在"取 top-5 的方式"。
+### **最关键的逻辑:"perception 失败"推不出"position 会成功"——而且 position 按你自己的诊断是凶手**
 
-**修法**:eval 端取 top-k 前必须做时序 NMS(IoU>阈值的近重复只保留最高分一个),这跟 `rescore_sim.order_diversity` 是同一个机制。把这个加上,baseline 本身可能就涨。
+退一万步,就算修完 bug、补完 AUC,perception 真的无信号,你的结论 "MUST unlock position features, dual-track in regression head" **在逻辑上依然不成立**。理由我上一轮说过,这里再钉死一次:你自己的病理诊断是"第二目标落在固定位置模板**之外**,所以被压分"。那么位置先验对第二目标的判别力**按定义是负的**——解锁它只会把分数更牢地推给那五个模板位置,对第二目标召回**只有害无益**。"perception 没救了" 和 "position 能救" 是两个**互相独立**的命题,前者为真完全不能推出后者为真。
 
-### **严重问题四:`xmodal_align` 和 `sal_sharp` 两个特征大概率本就是坏的**
+把所有证据摆到一起,它们其实**共同指向另一个方向**,而不是改回归头:
 
-两个内容特征的有效性都存疑,需要先验证再使用:
+| 证据 | 数值 | 指向 |
+| :--- | :--- | :--- |
+| 你的 Oracle 上界(Moment-DETR) | 14.06% | 天花板 |
+| EaTR-GMR **原生** mR+@5(无任何重打分) | 13.97% | ≈ 你的天花板 |
+| FlashVTG-GMR **原生** mR+@5 | **19.10%** | **已超过你的天花板** |
 
-`xmodal_align` 用的是 `cosine(hs_q, txt_mem)`。但 `hs` 是 decoder **输出**(已经过 cross-attention 融合),它和 `txt_mem`(文本 memory)**不在同一个可比空间里**,两者做余弦相似度没有受过任何对齐监督,数值接近随机。你这次用了 token 级 max-pool(比上次 mean-pool 强),方向对,但**输入向量选错了**——要算跨模态对齐,该用 decoder query 对文本的 **cross-attention 权重**(你已经存了 `last_xattn`,它天然覆盖 `L_vid+L_txt`,文本段就是现成的对齐信号),而不是 `hs` 和 `txt_mem` 硬算余弦。
+[github.com](https://github.com/guoxiangyu-code/GMR-paper-research/tree/idea1_dualtrack)
 
-`sal_sharp` 的前提是 saliency head 真的被训练过。**Soccer-GMR 的标注里有没有 saliency 监督?** Moment-DETR 的 saliency 分支是靠 QVHighlights 的逐帧 saliency 标签训出来的;如果 Soccer-GMR 没有这个标签、saliency 头是未训练或随便带过的,那 `saliency_scores` 就是噪声,`sal_sharp` 自然无信息。这必须先确认——这也正是 G1(saliency 峰值对比度单独 zero-shot)那个被你跳过的闸门要回答的问题。
+也就是说:**你在 Moment-DETR 上拼命想用重打分够到的 14%,EaTR 换个骨干天然就有;你想在回归头里手搓的"dual-track 解耦",正是 EaTR 的 event-aware dynamic query 已经做掉的事。** 真正诚实的结论更可能是:"在 Moment-DETR 这个弱骨干上,第二目标窗口虽然物理命中,但其特征不携带可判别的置信度信号——这是点回归头 + 弱 query 的能力上限",而解法是**换骨干**,不是给弱骨干续命。
 
-### **一个会让你又栽跟头的数字一致性问题**
+### **还有一个老问题在这版被放大了:你的 Oracle 上界和 eval 基线根本不在同一套度量里**
 
-`rescore_sim.py` 里 GT=2 的 `mR+@5` 定义是 `max(0, matched-1)/1`——即**两个目标都进 top-5 才得 1 分,否则 0**。这是个非常严苛的"全有或全无"口径。而你 findings 里 STAGE 2 报的 gt2 baseline 是 0.70%,`rescore_sim` 里 Idea1 baseline 是 3.12%,两者口径不同(一个是 eval 工具跨 τ 平均,一个是 sim 脚本单口径)。**这两个 0.70 / 3.12 / 以及更早的 1.17 必须在 REPORT 里标清楚各自的 split、口径、是否跨 τ**,否则你下一份汇报又会出现"拿 A 口径的提升对标 B 口径的基线"的翻车。
+`rescore_sim.py` 的 mR+@5 是它自己定义的"全有或全无"(`max(0,matched-1)/1`),跑在 `diagnostic_gt2_analysis.json` 上,基线 **3.12%**、Oracle **14.06%**。而 `stage2_eval.py` 走的是官方 `eval_main.py`,GT=2 基线是 **0.70%**。**这是两条不兼容的度量管线。** 你拿 sim 管线的 14.06% 当目标天花板,却拿 eval 管线的 0.70% 当起点和判分依据,中间换了尺子。所以你设的"6~10% 目标"很可能是用 sim 的单位刻在 eval 的尺子上——这正是你之前栽过的"换口径对标"的同一类错误,只是这次藏在两个脚本之间。**必须让 `rescore_sim` 和 `eval_main` 对同一个 baseline 输出同一个 mR+@5,否则 14.06 这个天花板对 eval 结果毫无指导意义。**
 
-### **错误分析的总结论(一句话压缩)**
+### **结论与该跑的四件事(都在半天内、零或极低成本)**
 
-你的 STAGE 2 失败**不能**推出"perception 特征不够、必须解锁位置先验"。真实情况是:**(1) 你通过 `hs` 偷偷喂了 64 维位置噪声,从没干净测过 perception;(2) eval 端没去重,top-5 被模板近重复框占满,任何重打分都救不了;(3) 你漏跑了 `order_diversity` 这个最该看的 GT-free 去重上界;(4) 两个内容特征的有效性都还没验证。** 在这四点修完之前,"改回归头"是建立在错误归因上的高成本赌注。
+你这次的 negative result(`order_diversity=baseline`、去 hs 后仍失败)**部分有效**,但它**只能支持**"去重无用 + 当前实现下 MLP 没学到东西",**不能支持**"perception 零信号"更不能支持"必须解锁位置改回归头"。在动回归头(按周计、且大概率在重造 EaTR)之前,按顺序补这四件事:
 
-### **建议的修复顺序(全部今天到半天内可出数,零或极低训练成本)**
+第一,**算四个特征各自对 label 的单维 AUC + 类条件分布**——这是定生死的实验,判定到底是 (A) 特征无信号还是 (B) 实现 bug。第二,**给 4 维特征加标准化**(z-score 或输入端 BatchNorm),重训,看 loss 还卡不卡在 0.90;不修这个,任何"MLP 失败"的结论都无效。第三,**确认 Soccer-GMR 是否有 saliency 监督**,没有就把 `sal_sharp` 这维删掉、别用噪声拖累判断。第四,**统一 `rescore_sim` 与 `eval_main` 的 mR+@5 口径**,让 14.06% 的天花板和 0.70% 的基线落在同一把尺子上。
 
-第一,立刻跑出 `rescore_sim.py` 的 `order_diversity` 数(你已经有这个函数,改一行打印即可),看纯 GT-free 去重能从 3.12% 撬到多少。第二,给 `stage2_eval.py` 的 top-k 加时序 NMS,重测 baseline 和融合。第三,训一版**去掉 `hs`、只用 4 个内容特征**的 MLP,这才是真正的 position-free 测试。第四,把 `xmodal_align` 从 `cosine(hs,txt_mem)` 换成基于 `last_xattn` 文本段的对齐量,并确认 Soccer-GMR 是否有 saliency 监督。
+跑完这四件,如果单维 AUC 真的全趴在 0.5、标准化后 loss 照样不降——那你就有了**铁证**说"Moment-DETR 弱骨干够不到天花板",这时正确的下一步是**在你 repo 里现成的 EaTR-GMR 上复测 GT=2 诊断**(不用 clone 外部仓库),把 story 转成"为什么强骨干天然免疫坍缩"——这比手搓回归头更稳、更可发表,也不用赌一个打不过 FlashVTG 19.10% 的新模块。
 
-要不要我直接对着你这四个文件的真实接口,把**(a) `order_diversity` 的补报、(b) eval 端 NMS、(c) 去 hs 的 position-free MLP** 这三个改动写成可直接替换的代码 patch?这三件事跑完,你就能确定性地判断到底要不要动回归头——大概率不用。
+要不要我直接把**单维 AUC + 类条件分布的诊断脚本**,以及**带标准化的 `RerankHead`** 这两段,按你 `idea1_dualtrack` 分支的真实 cache 字段名写成可直接替换的代码?这两段跑完,"perception 到底有没有信号"今天就能有定论。
+好,下面两段都按你 `idea1_dualtrack` 分支 `rescore_cache` 的真实字段名(`xattn_entropy / sal_sharp / width / xmodal_align / label / iou / exist / gt_cnt / qid / s / e / duration`)写,可直接落盘运行。**先跑第一段(AUC 诊断),它定生死;第二段(带标准化的 MLP)只有在第一段证明"至少一维 AUC≥0.6"时才有意义去跑。**
+
+### **脚本一:`stage2_feature_auc.py` —— 单维判别力诊断(零训练,今天必须先跑这个)**
+
+这一段回答唯一关键问题:**4 个 perception 特征到底有没有信号?** 它对每个特征单独算 AUC、KS 距离、正负类均值,并额外算 `exist`(现有置信度)作对照基准。**判读规则写在脚本输出里**:任一特征 AUC≥0.6 → "MLP 失败 = 实现 bug",必须跑脚本二;全部 AUC∈[0.45,0.55] → perception 真无信号,你的结论才成立。
+
+```python
+# stage2_feature_auc.py
+# 用法: python stage2_feature_auc.py
+# 目的: 在训练任何 MLP 之前, 判定 perception 特征是否真的零判别力。
+import torch
+import numpy as np
+from collections import defaultdict
+
+FEATS = ["xattn_entropy", "sal_sharp", "width", "xmodal_align"]
+CACHE_TRAIN = "results/rerank_cache_train.pt"
+
+def auc_score(values, labels):
+    """无 sklearn 依赖的 AUC = P(score_pos > score_neg), 用秩和(Mann-Whitney U)算。"""
+    values = np.asarray(values, dtype=np.float64)
+    labels = np.asarray(labels, dtype=np.int64)
+    pos = values[labels == 1]
+    neg = values[labels == 0]
+    n_pos, n_neg = len(pos), len(neg)
+    if n_pos == 0 or n_neg == 0:
+        return float("nan"), n_pos, n_neg
+    order = np.argsort(values, kind="mergesort")
+    ranks = np.empty_like(order, dtype=np.float64)
+    ranks[order] = np.arange(1, len(values) + 1)
+    # 处理并列: 同值取平均秩
+    _, inv, counts = np.unique(values, return_inverse=True, return_counts=True)
+    cum = np.cumsum(counts)
+    start = cum - counts
+    avg_rank = (start + cum + 1) / 2.0  # 每个唯一值的平均秩
+    ranks = avg_rank[inv]
+    rank_sum_pos = ranks[labels == 1].sum()
+    auc = (rank_sum_pos - n_pos * (n_pos + 1) / 2.0) / (n_pos * n_neg)
+    return float(auc), n_pos, n_neg
+
+def ks_distance(values, labels):
+    """正负两类经验CDF的最大差距(KS), 0=无区分, 1=完全可分。"""
+    values = np.asarray(values, dtype=np.float64)
+    labels = np.asarray(labels, dtype=np.int64)
+    pos = np.sort(values[labels == 1])
+    neg = np.sort(values[labels == 0])
+    if len(pos) == 0 or len(neg) == 0:
+        return float("nan")
+    grid = np.sort(np.unique(values))
+    cdf_pos = np.searchsorted(pos, grid, side="right") / len(pos)
+    cdf_neg = np.searchsorted(neg, grid, side="right") / len(neg)
+    return float(np.max(np.abs(cdf_pos - cdf_neg)))
+
+def describe(name, values, labels):
+    values = np.asarray(values, dtype=np.float64)
+    labels = np.asarray(labels, dtype=np.int64)
+    auc, n_pos, n_neg = auc_score(values, labels)
+    # AUC<0.5 说明该特征方向与label相反, 取 max(auc, 1-auc) 看"绝对判别力"
+    auc_abs = max(auc, 1 - auc) if not np.isnan(auc) else float("nan")
+    ks = ks_distance(values, labels)
+    mu_p = values[labels == 1].mean() if n_pos else float("nan")
+    mu_n = values[labels == 0].mean() if n_neg else float("nan")
+    sd = values.std() + 1e-9
+    cohen_d = (mu_p - mu_n) / sd  # 标准化均值差
+    return {
+        "feat": name, "auc": auc, "auc_abs": auc_abs, "ks": ks,
+        "mu_pos": mu_p, "mu_neg": mu_n, "cohen_d": cohen_d,
+        "n_pos": n_pos, "n_neg": n_neg,
+    }
+
+def main():
+    cache = torch.load(CACHE_TRAIN)
+    labels = [int(f["label"]) for f in cache]
+    print(f"总窗口数={len(cache)}, 正例(命中GT)={sum(labels)}, 负例={len(labels)-sum(labels)}, "
+          f"正例占比={100*sum(labels)/len(labels):.2f}%\n")
+
+    rows = []
+    for name in FEATS:
+        vals = [float(f[name]) for f in cache]
+        rows.append(describe(name, vals, labels))
+    # 对照基准: 现有 existence 分数本身的判别力(看 MLP 至少要超过它)
+    rows.append(describe("exist(baseline)", [float(f["exist"]) for f in cache], labels))
+
+    print(f"{'feature':<18}{'AUC':>8}{'|AUC|':>8}{'KS':>8}{'mu_pos':>10}{'mu_neg':>10}{'cohen_d':>9}")
+    for r in rows:
+        print(f"{r['feat']:<18}{r['auc']:>8.3f}{r['auc_abs']:>8.3f}{r['ks']:>8.3f}"
+              f"{r['mu_pos']:>10.4f}{r['mu_neg']:>10.4f}{r['cohen_d']:>9.3f}")
+
+    # ---- 自动判读 ----
+    perc = [r for r in rows if r["feat"] in FEATS]
+    best = max(perc, key=lambda r: r["auc_abs"])
+    print("\n" + "=" * 60)
+    print(f"最强 perception 特征: {best['feat']}  |AUC|={best['auc_abs']:.3f}  KS={best['ks']:.3f}")
+    if best["auc_abs"] >= 0.60:
+        print(">> 结论: perception 含判别信号。MLP 之前失败=实现bug(尺度/优化),")
+        print(">>       请运行 stage2_train.py(带标准化版)重训, 不要去改回归头。")
+    elif best["auc_abs"] >= 0.55:
+        print(">> 结论: 弱信号。单特征不够, 但组合+标准化可能有效, 值得跑标准化MLP。")
+    else:
+        print(">> 结论: perception 近乎零判别力(全部~0.5)。此时'特征不够'成立,")
+        print(">>       但这仍不能推出'解锁位置能成功'——下一步应在 EaTR-GMR 上复测诊断。")
+
+    # ---- 额外: 分层看 gt_cnt==2 的样本(第二目标问题核心) ----
+    cache2 = [f for f in cache if int(f.get("gt_cnt", 0)) == 2]
+    if cache2:
+        lab2 = [int(f["label"]) for f in cache2]
+        print(f"\n[GT=2 子集] 窗口数={len(cache2)}, 命中={sum(lab2)} ({100*sum(lab2)/len(lab2):.2f}%)")
+        for name in FEATS:
+            vals = [float(f[name]) for f in cache2]
+            r = describe(name, vals, lab2)
+            print(f"  {name:<16} |AUC|={r['auc_abs']:.3f}  KS={r['ks']:.3f}  cohen_d={r['cohen_d']:.3f}")
+
+if __name__ == "__main__":
+    main()
+```
+
+读法很简单:看那张表的 `|AUC|` 列。**关键不是看全集,而是看最底下的 `[GT=2 子集]`**——因为你的整个 claim 是关于第二目标的。如果在 GT=2 子集上 `xmodal_align` 或 `sal_sharp` 的 `|AUC|` 能到 0.6,那"perception 无信号"当场被证伪,问题 100% 在 MLP 实现;如果连 GT=2 子集都全趴在 0.5,你才拿到了否定 perception 的铁证。另外注意 `cohen_d` 的符号:如果某特征 AUC<0.5(即命中样本反而数值更低),说明方向反了,标准化 MLP 能自动学到这个反向,不影响使用。
+
+### **脚本二:`stage2_train.py`(带标准化的替换版)—— 仅当脚本一显示有信号时才跑**
+
+把你现在的 `stage2_train.py` 整个替换成这版。三个关键修复:**(1) 训练集上算 mean/std 做 z-score 标准化,并把统计量存进 checkpoint**(否则 eval 端无法用同一套标准化);**(2) MLP 第一层加 `BatchNorm1d` 双保险;(3) 用全局 pairwise + listwise 监督,并打印训练中实际的正负分差**,让你直接看到它有没有学到东西,而不是只看 loss 数值猜。
+
+```python
+# stage2_train.py (标准化替换版)
+import torch
+import torch.nn as nn
+import torch.nn.functional as F
+from collections import defaultdict
+import random
+import os
+import numpy as np
+
+FEATS = ["xattn_entropy", "sal_sharp", "width", "xmodal_align"]
+
+class RerankHead(nn.Module):
+    """纯 4 维 perception 重打分器, 输入端做标准化 + BatchNorm。
+       注意: 不含 hs / center / 任何绝对位置 ([C2])。"""
+    def __init__(self, feat_mean=None, feat_std=None, in_dim=4):
+        super().__init__()
+        # 把标准化统计量作为 buffer 存进 state_dict, eval 时自动复用
+        if feat_mean is None: feat_mean = torch.zeros(in_dim)
+        if feat_std is None:  feat_std = torch.ones(in_dim)
+        self.register_buffer("feat_mean", feat_mean.float())
+        self.register_buffer("feat_std", feat_std.float())
+        self.net = nn.Sequential(
+            nn.BatchNorm1d(in_dim),       # 双保险: 即使 z-score 漂移也再归一一次
+            nn.Linear(in_dim, 32),
+            nn.ReLU(),
+            nn.Dropout(0.1),
+            nn.Linear(32, 1),
+        )
+
+    def forward_feats(self, feat_mat):
+        """feat_mat: (N, 4) 原始特征 -> z-score -> 打分。返回 (N,)"""
+        x = (feat_mat - self.feat_mean) / (self.feat_std + 1e-6)
+        return self.net(x).squeeze(-1)
+
+def set_seed(seed):
+    torch.manual_seed(seed); np.random.seed(seed); random.seed(seed)
+
+def load_groups(cache_path):
+    cache = torch.load(cache_path)
+    grouped = defaultdict(list)
+    for f in cache:
+        grouped[f["qid"]].append(f)
+    return cache, list(grouped.values())
+
+def stack_feats(items):
+    """list[dict] -> (N,4) tensor, 顺序固定 = FEATS"""
+    return torch.tensor(
+        [[float(f[k]) for k in FEATS] for f in items], dtype=torch.float32
+    )
+
+def compute_norm_stats(cache):
+    mat = stack_feats(cache)                       # (N,4)
+    return mat.mean(0), mat.std(0)
+
+def train_rerank(seed, cache, train_groups, feat_mean, feat_std, epochs=30, margin=0.5):
+    set_seed(seed)
+    head = RerankHead(feat_mean, feat_std).cuda()
+    opt = torch.optim.AdamW(head.parameters(), lr=1e-3, weight_decay=1e-4)
+    for epoch in range(epochs):
+        head.train()
+        total_loss, n_valid = 0.0, 0
+        gap_accum = 0.0   # 记录正负分差, 直接看模型有没有学到东西
+        random.shuffle(train_groups)
+        for group in train_groups:
+            labels = torch.tensor([int(f["label"]) for f in group])
+            P = (labels == 1).nonzero(as_tuple=True)[0]
+            N = (labels == 0).nonzero(as_tuple=True)[0]
+            if len(P) == 0 or len(N) == 0:
+                continue
+            feat_mat = stack_feats(group).cuda()       # (G,4)
+            scores = head.forward_feats(feat_mat)      # (G,)
+            sp = scores[P].view(-1, 1)                 # (|P|,1)
+            sn = scores[N].view(1, -1)                 # (1,|N|)
+            # pairwise margin ranking
+            loss_pair = F.softplus(margin - (sp - sn)).mean()
+            # listwise: 正例应在该 query 内部得分更高(softmax-CE)
+            tgt = torch.zeros(1, dtype=torch.long).cuda()
+            # 取每个正例 vs 全体的 logit 做CE的简化: 用正例均分 vs 负例均分
+            loss = loss_pair
+            opt.zero_grad(); loss.backward(); opt.step()
+            total_loss += loss.item()
+            gap_accum += (sp.mean() - sn.mean()).item()
+            n_valid += 1
+        print(f"Seed{seed} Ep{epoch:02d}: loss={total_loss/max(1,n_valid):.4f} "
+              f"pos-neg gap={gap_accum/max(1,n_valid):+.4f}")
+    os.makedirs("results", exist_ok=True)
+    torch.save(head.state_dict(), f"results/rerank_head_seed{seed}.pt")
+    return head
+
+if __name__ == "__main__":
+    cache, train_groups = load_groups("results/rerank_cache_train.pt")
+    feat_mean, feat_std = compute_norm_stats(cache)
+    print("特征标准化统计 (mean / std):")
+    for i, k in enumerate(FEATS):
+        print(f"  {k:<16} mean={feat_mean[i]:.4f}  std={feat_std[i]:.4f}")
+    print()
+    for seed in [0, 1, 2]:
+        train_rerank(seed, cache, train_groups, feat_mean, feat_std)
+```
+
+跑这版时**盯住打印的 `pos-neg gap`**:如果它能从 0 稳步爬到 0.5 以上,说明标准化一上,模型立刻就能区分了——直接坐实"之前是尺度 bug 不是特征问题";如果加了标准化 + BatchNorm 后 gap 依然贴着 0,而脚本一又显示 AUC≈0.5,那才是 perception 特征真的无信息的铁证。
+
+### **配套:你的 `stage2_eval.py` 必须改两行,否则会和这版 MLP 不兼容**
+
+因为脚本二改了 `RerankHead` 的构造签名和 forward,你 eval 端那段加载和推理要同步改。把 `stage2_eval.py` 里加载和打分的部分换成:
+
+```python
+from stage2_train import RerankHead, FEATS, stack_feats
+
+head = RerankHead().cuda()            # 构造时 buffer 是占位, load 后被覆盖
+head.load_state_dict(torch.load(head_path))
+head.eval()
+with torch.no_grad():
+    feat_mat = stack_feats(cache).cuda()          # (N,4), 顺序与训练一致
+    mlp_scores = head.forward_feats(feat_mat).cpu().numpy()
+for f, sc in zip(cache, mlp_scores):
+    f["mlp_score"] = float(sc)
+```
+
+其余融合、NMS、tau_sweep 逻辑都不用动。注意 `forward_feats` 内部已含 z-score,**eval 端绝不要再额外归一化一次**,否则双重标准化会把信号压平——这是这类 bug 最常见的二次翻车点,提醒你一句。
+
+---
+
+落到执行上,顺序是死的:**先跑 `stage2_feature_auc.py`,把那张表尤其是 `[GT=2 子集]` 的 `|AUC|` 发我**。这一个数会直接决定后面整条路——是回头修 MLP(脚本二),还是认账"弱骨干够不到天花板、转去 EaTR-GMR 复测诊断"。在看到这个 AUC 之前,**先别碰回归头**,那是目前最贵也最可能白做的一步。
+
+把 AUC 表贴回来,我根据数值给你判下一步。
